@@ -8,3 +8,4 @@
 /*.exec
 **/org.eclipse.wst.validation.prefs
 **/org.eclipse.wst.common.component
+**/dependency-reduced-pom.xml
