@@ -1,11 +1,7 @@
 **/.DS_Store
-.project
-.settings
+**/.settings
 **/.project
-/target
-/*/target
+**/target
 **/.classpath
-/*.exec
-**/org.eclipse.wst.validation.prefs
-**/org.eclipse.wst.common.component
 **/dependency-reduced-pom.xml
+/*.exec
