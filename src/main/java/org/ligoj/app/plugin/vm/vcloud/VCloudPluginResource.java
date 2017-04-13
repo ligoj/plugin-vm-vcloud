@@ -453,14 +453,14 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	}
 
 	@Override
-	public boolean checkStatus(final String node, final Map<String, String> parameters) throws Exception {
+	public boolean checkStatus(final Map<String, String> parameters) throws Exception {
 		// Status is UP <=> Administration access is UP (if defined)
 		validateAdminAccess(parameters);
 		return true;
 	}
 
 	@Override
-	public SubscriptionStatusWithData checkSubscriptionStatus(final String node, final Map<String, String> parameters) throws Exception {
+	public SubscriptionStatusWithData checkSubscriptionStatus(final Map<String, String> parameters) throws Exception {
 		final SubscriptionStatusWithData status = new SubscriptionStatusWithData();
 		status.put("vm", validateVm(parameters));
 		return status;
