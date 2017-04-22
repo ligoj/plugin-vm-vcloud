@@ -39,6 +39,7 @@ import org.ligoj.app.resource.plugin.CurlProcessor;
 import org.ligoj.app.resource.plugin.CurlRequest;
 import org.ligoj.bootstrap.core.resource.BusinessException;
 import org.ligoj.bootstrap.core.validation.ValidationJsonException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class VCloudPluginResource extends AbstractXmlApiToolPluginResource implements VmServicePlugin {
+public class VCloudPluginResource extends AbstractXmlApiToolPluginResource implements VmServicePlugin, InitializingBean {
 
 	/**
 	 * Plug-in key.
@@ -95,11 +96,6 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	public static final String PARAMETER_VM = KEY + ":id";
 
 	private static final Map<VmOperation, String> OPERATION_TO_VCLOUD = new EnumMap<>(VmOperation.class);
-
-	static {
-		OPERATION_TO_VCLOUD.put(VmOperation.OFF, "powerOff");
-		OPERATION_TO_VCLOUD.put(VmOperation.ON, "powerOn");
-	}
 
 	/**
 	 * Mapping table giving the operation to execute depending on the requested operation and the status of the VM.
@@ -206,42 +202,6 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	 * </TABLE>
 	 */
 	private static final Map<VmStatus, Map<VmOperation, VmOperation>> FAILSAFE_OPERATIONS = new EnumMap<>(VmStatus.class);
-
-	/**
-	 * Register a mapping Status+operation to operation.
-	 * 
-	 * @param status
-	 *            The current status.
-	 * @param operation
-	 *            The requested operation
-	 * @param operationFailSafe
-	 *            The computed operation.
-	 */
-	private static void registerOperation(final VmStatus status, final VmOperation operation, final VmOperation operationFailSafe) {
-		FAILSAFE_OPERATIONS.computeIfAbsent(status, s -> new EnumMap<>(VmOperation.class));
-		FAILSAFE_OPERATIONS.get(status).put(operation, operationFailSafe);
-	}
-
-	static {
-		// Powered off status
-		registerOperation(VmStatus.POWERED_OFF, VmOperation.ON, VmOperation.ON);
-		registerOperation(VmStatus.POWERED_OFF, VmOperation.RESET, VmOperation.ON);
-		registerOperation(VmStatus.POWERED_OFF, VmOperation.REBOOT, VmOperation.ON);
-
-		// Powered on status
-		registerOperation(VmStatus.POWERED_ON, VmOperation.SHUTDOWN, VmOperation.SHUTDOWN);
-		registerOperation(VmStatus.POWERED_ON, VmOperation.OFF, VmOperation.OFF);
-		registerOperation(VmStatus.POWERED_ON, VmOperation.SUSPEND, VmOperation.SUSPEND);
-		registerOperation(VmStatus.POWERED_ON, VmOperation.RESET, VmOperation.RESET);
-		registerOperation(VmStatus.POWERED_ON, VmOperation.REBOOT, VmOperation.REBOOT);
-
-		// Suspended status
-		registerOperation(VmStatus.SUSPENDED, VmOperation.SHUTDOWN, VmOperation.OFF);
-		registerOperation(VmStatus.SUSPENDED, VmOperation.OFF, VmOperation.OFF);
-		registerOperation(VmStatus.SUSPENDED, VmOperation.ON, VmOperation.ON);
-		registerOperation(VmStatus.SUSPENDED, VmOperation.RESET, VmOperation.RESET);
-		registerOperation(VmStatus.SUSPENDED, VmOperation.REBOOT, VmOperation.RESET);
-	}
 
 	@Autowired
 	private CurlCacheToken curlCacheToken;
@@ -540,5 +500,45 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 
 		// Ignored operation
 		return null;
+	}
+
+	/**
+	 * Register a mapping Status+operation to operation.
+	 * 
+	 * @param status
+	 *            The current status.
+	 * @param operation
+	 *            The requested operation
+	 * @param operationFailSafe
+	 *            The computed operation.
+	 */
+	private void registerOperation(final VmStatus status, final VmOperation operation, final VmOperation operationFailSafe) {
+		FAILSAFE_OPERATIONS.computeIfAbsent(status, s -> new EnumMap<>(VmOperation.class));
+		FAILSAFE_OPERATIONS.get(status).put(operation, operationFailSafe);
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		OPERATION_TO_VCLOUD.put(VmOperation.OFF, "powerOff");
+		OPERATION_TO_VCLOUD.put(VmOperation.ON, "powerOn");
+
+		// Powered off status
+		registerOperation(VmStatus.POWERED_OFF, VmOperation.ON, VmOperation.ON);
+		registerOperation(VmStatus.POWERED_OFF, VmOperation.RESET, VmOperation.ON);
+		registerOperation(VmStatus.POWERED_OFF, VmOperation.REBOOT, VmOperation.ON);
+
+		// Powered on status
+		registerOperation(VmStatus.POWERED_ON, VmOperation.SHUTDOWN, VmOperation.SHUTDOWN);
+		registerOperation(VmStatus.POWERED_ON, VmOperation.OFF, VmOperation.OFF);
+		registerOperation(VmStatus.POWERED_ON, VmOperation.SUSPEND, VmOperation.SUSPEND);
+		registerOperation(VmStatus.POWERED_ON, VmOperation.RESET, VmOperation.RESET);
+		registerOperation(VmStatus.POWERED_ON, VmOperation.REBOOT, VmOperation.REBOOT);
+
+		// Suspended status
+		registerOperation(VmStatus.SUSPENDED, VmOperation.SHUTDOWN, VmOperation.OFF);
+		registerOperation(VmStatus.SUSPENDED, VmOperation.OFF, VmOperation.OFF);
+		registerOperation(VmStatus.SUSPENDED, VmOperation.ON, VmOperation.ON);
+		registerOperation(VmStatus.SUSPENDED, VmOperation.RESET, VmOperation.RESET);
+		registerOperation(VmStatus.SUSPENDED, VmOperation.REBOOT, VmOperation.RESET);
 	}
 }
