@@ -30,7 +30,7 @@ import org.ligoj.app.model.Project;
 import org.ligoj.app.model.Subscription;
 import org.ligoj.app.plugin.vm.model.VmOperation;
 import org.ligoj.app.plugin.vm.model.VmStatus;
-import org.ligoj.app.resource.node.NodeResource;
+import org.ligoj.app.resource.node.ParameterValueResource;
 import org.ligoj.app.resource.subscription.SubscriptionResource;
 import org.ligoj.bootstrap.core.IDescribableBean;
 import org.ligoj.bootstrap.core.resource.BusinessException;
@@ -57,7 +57,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	private VCloudPluginResource resource;
 
 	@Autowired
-	private NodeResource nodeResource;
+	private ParameterValueResource pvResource;
 
 	@Autowired
 	private SubscriptionResource subscriptionResource;
@@ -126,7 +126,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<a/>")));
 		httpServer.start();
 
-		final Map<String, String> parameters = nodeResource.getParametersAsMap("service:vm:vcloud:obs-fca-info");
+		final Map<String, String> parameters = pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info");
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "0");
 		resource.validateVm(parameters);
 	}
@@ -135,7 +135,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	public void validateVm() throws Exception {
 		prepareMockItem();
 
-		final Map<String, String> parameters = nodeResource.getParametersAsMap("service:vm:vcloud:obs-fca-info");
+		final Map<String, String> parameters = pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info");
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "75aa69b4-8cff-40cd-9338-9abafc7d5935");
 		final Vm vm = resource.validateVm(parameters);
 		checkVm(vm);
