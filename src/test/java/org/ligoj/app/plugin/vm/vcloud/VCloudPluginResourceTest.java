@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -126,7 +127,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<a/>")));
 		httpServer.start();
 
-		final Map<String, String> parameters = pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info");
+		final Map<String, String> parameters = new HashMap<>(pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info"));
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "0");
 		resource.validateVm(parameters);
 	}
@@ -135,7 +136,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	public void validateVm() throws Exception {
 		prepareMockItem();
 
-		final Map<String, String> parameters = pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info");
+		final Map<String, String> parameters = new HashMap<>(pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info"));
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "75aa69b4-8cff-40cd-9338-9abafc7d5935");
 		final Vm vm = resource.validateVm(parameters);
 		checkVm(vm);
