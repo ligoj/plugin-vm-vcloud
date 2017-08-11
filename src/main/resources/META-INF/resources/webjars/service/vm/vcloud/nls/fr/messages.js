@@ -5,9 +5,9 @@ define({
 	"service:vm:vcloud:id" : "Identifiant VM",
 	"service:vm:vcloud:resources" : "Ressources",
 	"error" : {
-		"vcloud-vm" : "Invalid VM",
-		"vcloud-login" : "Authentication failed",
-		"vcloud-admin" : "Administrator access failed"
+		"vcloud-vm" : "VM invalide",
+		"vcloud-login" : "Authentication échouée",
+		"vcloud-admin" : "Accès administraton échoué"
 	}
 
 });
