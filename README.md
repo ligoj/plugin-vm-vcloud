@@ -1,4 +1,4 @@
-# :link: Ligoj vCloud plugin [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.ligoj.plugin/plugin-vm-vcloud/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.ligoj.plugin/plugin-vm-vcloud)
+# :link: Ligoj vCloud plugin [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.ligoj.plugin/plugin-vm-vcloud/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.ligoj.plugin/plugin-vm-vcloud) [![Download](https://api.bintray.com/packages/ligoj/maven-repo/plugin-vm-vcloud/images/download.svg) ](https://bintray.com/ligoj/maven-repo/plugin-vm-vcloud/_latestVersion)
 
 [![Build Status](https://travis-ci.org/ligoj/plugin-vm-vcloud.svg?branch=master)](https://travis-ci.org/ligoj/plugin-vm-vcloud)
 [![Build Status](https://circleci.com/gh/ligoj/plugin-vm-vcloud.svg?style=svg)](https://circleci.com/gh/ligoj/plugin-vm-vcloud)
@@ -15,7 +15,7 @@
 
 [Ligoj](https://github.com/ligoj/ligoj) EC2 AWS plugin, and extending [VM plugin](https://github.com/ligoj/plugin-vm)
 Provides the following features :
-- Supported operations from the [VM plugin](https://github.com/ligoj/plugin-vm) : ON, OFF, REBOOT, RESTART. No suspend or resume.
+- Supported operations from the [VM plugin](https://github.com/ligoj/plugin-vm) : ON, OFF, REBOOT, RESTART, SUSPEND and RESUME.
 - Use AWS secret and access key with AWS API 4.0
 
 Dashboard features :
