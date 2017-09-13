@@ -33,6 +33,7 @@ import org.ligoj.app.api.SubscriptionStatusWithData;
 import org.ligoj.app.dao.NodeRepository;
 import org.ligoj.app.plugin.vm.VmResource;
 import org.ligoj.app.plugin.vm.VmServicePlugin;
+import org.ligoj.app.plugin.vm.dao.VmScheduleRepository;
 import org.ligoj.app.plugin.vm.model.VmOperation;
 import org.ligoj.app.plugin.vm.model.VmStatus;
 import org.ligoj.app.resource.plugin.AbstractXmlApiToolPluginResource;
@@ -214,6 +215,9 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 
 	@Autowired
 	private SecurityHelper securityHelper;
+
+	@Autowired
+	private VmScheduleRepository vmScheduleRepository;
 
 	@Value("${saas.service-vm-vcloud-auth-retries:2}")
 	private int retries;
@@ -446,9 +450,10 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	}
 
 	@Override
-	public SubscriptionStatusWithData checkSubscriptionStatus(final Map<String, String> parameters) throws Exception {
+	public SubscriptionStatusWithData checkSubscriptionStatus(final int subscription, final String node, final Map<String, String> parameters) throws Exception { // NOSONAR
 		final SubscriptionStatusWithData status = new SubscriptionStatusWithData();
 		status.put("vm", validateVm(parameters));
+		status.put("schedules", vmScheduleRepository.countBySubscription(subscription));
 		return status;
 	}
 
