@@ -356,6 +356,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		result.setCpu(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("numberOfCpus"))));
 		result.setBusy(Boolean.parseBoolean(ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isBusy")), "false")));
 		result.setVApp(StringUtils.trimToNull(record.getAttribute("containerName")));
+		result.setVAppId(StringUtils.trimToNull(StringUtils.removeStart(record.getAttribute("container"), "urn:vcloud:vapp:")));
 		result.setRam(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("memoryMB"))));
 		result.setDeployed(
 				Boolean.parseBoolean(ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isDeployed")), "false")));

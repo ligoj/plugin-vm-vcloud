@@ -13,5 +13,14 @@ import lombok.Setter;
 public class VCloudVm extends Vm {
 
 	private String storageProfileName;
+
+	/**
+	 * vApp name.
+	 */
 	private String vApp;
+
+	/**
+	 * vAPP identifier.
+	 */
+	private String vAppId;
 }
