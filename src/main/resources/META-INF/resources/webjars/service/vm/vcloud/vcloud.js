@@ -57,7 +57,10 @@ define(function () {
 					'service:vm:resources', current.$super('icon')('sliders') + vm.cpu + ' CPU, ' + formatManager.formatSize((vm.ram || 0) * 1024 * 1024)
 				],
 				[
-					'service:vm:vcloud:vapp', current.$super('icon')('server', 'service:vm:vcloud:vapp') + vm.vApp
+					'service:vm:vcloud:vapp', current.$super('icon')('server', 'service:vm:vcloud:vapp') + vm.vapp
+				],
+				[
+					'service:vm:vcloud:organization', current.$super('icon')('building-o', 'service:vm:vcloud:organization') + subscription.parameters['service:vm:vcloud:organization']
 				]
 			], 1);
 		}
