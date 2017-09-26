@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.ligoj.app.api.SubscriptionStatusWithData;
 import org.ligoj.app.dao.NodeRepository;
+import org.ligoj.app.plugin.vm.Vm;
 import org.ligoj.app.plugin.vm.VmResource;
 import org.ligoj.app.plugin.vm.VmServicePlugin;
 import org.ligoj.app.plugin.vm.dao.VmScheduleRepository;
@@ -255,18 +256,12 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		processor.setToken(authenticate(url, authentication, processor));
 	}
 
-	/**
-	 * Validate the VM configuration.
-	 * 
-	 * @param parameters
-	 *            the space parameters.
-	 * @return Virtual Machine description.
-	 */
-	protected Vm validateVm(final Map<String, String> parameters) throws SAXException, IOException, ParserConfigurationException {
+	@Override
+	public VCloudVm getVmDetails(final Map<String, String> parameters) throws SAXException, IOException, ParserConfigurationException {
 
 		final String id = parameters.get(PARAMETER_VM);
 		// Get the VM if exists
-		final List<Vm> vms = toVms(
+		final List<VCloudVm> vms = toVms(
 				getVCloudResource(parameters, "/query?type=vm&format=idrecords&filter=id==urn:vcloud:vm:" + id + "&pageSize=1"));
 
 		// Check the VM has been found
@@ -280,7 +275,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	@Override
 	public void link(final int subscription) throws Exception {
 		// Validate the virtual machine name
-		validateVm(subscriptionResource.getParameters(subscription));
+		getVmDetails(subscriptionResource.getParameters(subscription));
 	}
 
 	/**
@@ -296,7 +291,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	@GET
 	@Path("{node:[a-z].*}/{criteria}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public List<Vm> findAllByName(@PathParam("node") final String node, @PathParam("criteria") final String criteria)
+	public List<VCloudVm> findAllByName(@PathParam("node") final String node, @PathParam("criteria") final String criteria)
 			throws IOException, SAXException, ParserConfigurationException {
 		// Check the node exists
 		if (nodeRepository.findOneVisible(node, securityHelper.getLogin()) == null) {
@@ -342,8 +337,8 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	/**
 	 * Build a described {@link Vm} bean from a XML VMRecord entry.
 	 */
-	private Vm toVm(final Element record) {
-		final Vm result = new Vm();
+	private VCloudVm toVm(final Element record) {
+		final VCloudVm result = new VCloudVm();
 		result.setId(StringUtils.removeStart(record.getAttribute("id"), "urn:vcloud:vm:"));
 		result.setName(record.getAttribute("name"));
 		result.setDescription(record.getAttribute("guestOs"));
@@ -351,10 +346,10 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		// Optional attributes
 		result.setStorageProfileName(record.getAttribute("storageProfileName"));
 		result.setStatus(EnumUtils.getEnum(VmStatus.class, record.getAttribute("status")));
-		result.setNumberOfCpus(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("numberOfCpus"))));
+		result.setCpu(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("numberOfCpus"))));
 		result.setBusy(Boolean.parseBoolean(ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isBusy")), "false")));
-		result.setContainerName(StringUtils.trimToNull(record.getAttribute("containerName")));
-		result.setMemoryMB(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("memoryMB"))));
+		result.setVApp(StringUtils.trimToNull(record.getAttribute("containerName")));
+		result.setRam(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("memoryMB"))));
 		result.setDeployed(
 				Boolean.parseBoolean(ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isDeployed")), "false")));
 		return result;
@@ -363,7 +358,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	/**
 	 * Build described beans from a XML result.
 	 */
-	private List<Vm> toVms(final String vmAsXml) throws SAXException, IOException, ParserConfigurationException {
+	private List<VCloudVm> toVms(final String vmAsXml) throws SAXException, IOException, ParserConfigurationException {
 		final NodeList tags = getTags(vmAsXml, "VMRecord");
 		return IntStream.range(0, tags.getLength()).mapToObj(tags::item).map(n -> (Element) n).map(this::toVm).collect(Collectors.toList());
 	}
@@ -439,7 +434,8 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		final int linkIndex = Math.min(
 				ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/") + "vmware_vcloud_suite/".length(),
 				portletVersions.length());
-		return portletVersions.substring(linkIndex, Math.max(portletVersions.indexOf('\"', linkIndex), portletVersions.length()));
+		return portletVersions.substring(linkIndex, Math.min(Math.max(portletVersions.indexOf('#', linkIndex), linkIndex),
+				Math.max(portletVersions.indexOf('\"', linkIndex), linkIndex)));
 	}
 
 	@Override
@@ -450,9 +446,10 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	}
 
 	@Override
-	public SubscriptionStatusWithData checkSubscriptionStatus(final int subscription, final String node, final Map<String, String> parameters) throws Exception { // NOSONAR
+	public SubscriptionStatusWithData checkSubscriptionStatus(final int subscription, final String node,
+			final Map<String, String> parameters) throws Exception { // NOSONAR
 		final SubscriptionStatusWithData status = new SubscriptionStatusWithData();
-		status.put("vm", validateVm(parameters));
+		status.put("vm", getVmDetails(parameters));
 		status.put("schedules", vmScheduleRepository.countBySubscription(subscription));
 		return status;
 	}
@@ -463,7 +460,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		final String vmUrl = "/vApp/vm-" + parameters.get(PARAMETER_VM);
 
 		// First get VM state
-		final Vm vm = validateVm(parameters);
+		final VCloudVm vm = getVmDetails(parameters);
 		final VmStatus status = vm.getStatus();
 
 		// Get the right operation depending on the current state

@@ -13,6 +13,10 @@ define(function () {
 		 */
 		renderFeatures: function (subscription) {
 			var result = '';
+			if (subscription.parameters && subscription.parameters['service:vm:vcloud:url'] && subscription.parameters['service:vm:vcloud:organization']) {
+				// Add vDirector link
+				result += current.$super('renderServicelink')('home', subscription.parameters['service:vm:vcloud:url'] + '/' + subscription.parameters['service:vm:vcloud:organization'] + '/#/vmListPage?', null , null, ' target="_blank"');
+			}
 			if (subscription.parameters && subscription.parameters.console) {
 				// Add Console
 				result += '<button class="btn-link" data-toggle="popover" data-html="true" data-content="<img src=';
@@ -40,13 +44,13 @@ define(function () {
 					'name', vm.name
 				],
 				[
-					'description', vm.description
+					'service:vm:os', vm.os
 				],
 				[
-					'service:vm:vcloud:resources', current.$super('icon')('sliders') + vm.memoryMB + ' Mo, ' + vm.numberOfCpus + ' CPU'
+					'service:vm:resources', current.$super('icon')('sliders') + vm.cpu + ' CPU, ' + formatManager.formatSize((vm.ram || 0) * 1024 * 1024)
 				],
 				[
-					'service:vm:vcloud:vapp', current.$super('icon')('server', 'service:vm:vcloud:vapp') + vm.containerName
+					'service:vm:vcloud:vapp', current.$super('icon')('server', 'service:vm:vcloud:vapp') + vm.vApp
 				]
 			], 1);
 		}
