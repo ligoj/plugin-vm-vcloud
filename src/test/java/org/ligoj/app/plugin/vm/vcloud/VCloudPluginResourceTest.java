@@ -30,11 +30,11 @@ import org.ligoj.app.model.Parameter;
 import org.ligoj.app.model.ParameterValue;
 import org.ligoj.app.model.Project;
 import org.ligoj.app.model.Subscription;
+import org.ligoj.app.plugin.vm.Vm;
 import org.ligoj.app.plugin.vm.model.VmOperation;
 import org.ligoj.app.plugin.vm.model.VmStatus;
 import org.ligoj.app.resource.node.ParameterValueResource;
 import org.ligoj.app.resource.subscription.SubscriptionResource;
-import org.ligoj.bootstrap.core.IDescribableBean;
 import org.ligoj.bootstrap.core.resource.BusinessException;
 import org.ligoj.bootstrap.core.validation.ValidationJsonException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,7 +129,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Not find VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<a/>")));
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<a/>")));
 		httpServer.start();
 
 		final Map<String, String> parameters = new HashMap<>(pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info"));
@@ -171,7 +171,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Find a specific VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK)
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK)
 				.withBody(IOUtils.toString(
 						new ClassPathResource("mock-server/vcloud/vcloud-query-vm-poweredoff-deployed.xml").getInputStream(),
 						StandardCharsets.UTF_8))));
@@ -182,7 +182,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Find a list of VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils
 				.toString(new ClassPathResource("mock-server/vcloud/vcloud-query-search.xml").getInputStream(), StandardCharsets.UTF_8))));
 		httpServer.start();
 	}
@@ -196,8 +196,8 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void checkStatusAuthenticationFailed() throws Exception {
 		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_URL, "vcloud-login"));
-		httpServer.stubFor(post(urlPathEqualTo("/sessions")).willReturn(aResponse().withStatus(HttpStatus.SC_FORBIDDEN)));
+		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_API, "vcloud-login"));
+		httpServer.stubFor(post(urlPathEqualTo("/api/sessions")).willReturn(aResponse().withStatus(HttpStatus.SC_FORBIDDEN)));
 		httpServer.start();
 		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
 	}
@@ -205,11 +205,11 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void checkStatusAuthenticationFailedThenSucceed() throws Exception {
 		prepareMockVersion();
-		httpServer.stubFor(post(urlPathEqualTo("/sessions")).inScenario("auth").whenScenarioStateIs(Scenario.STARTED)
+		httpServer.stubFor(post(urlPathEqualTo("/api/api/sessions")).inScenario("auth").whenScenarioStateIs(Scenario.STARTED)
 				.willReturn(aResponse().withStatus(HttpStatus.SC_FORBIDDEN)).willSetStateTo("failed"));
-		httpServer.stubFor(post(urlPathEqualTo("/sessions")).inScenario("auth").whenScenarioStateIs("failed")
+		httpServer.stubFor(post(urlPathEqualTo("/api/sessions")).inScenario("auth").whenScenarioStateIs("failed")
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withHeader("x-vcloud-authorization", "token")));
-		httpServer.stubFor(get(urlPathEqualTo("/admin")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(
+		httpServer.stubFor(get(urlPathEqualTo("/api/admin")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(
 				IOUtils.toString(new ClassPathResource("mock-server/vcloud/vcloud-admin.xml").getInputStream(), StandardCharsets.UTF_8))));
 		Assert.assertTrue(resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription)));
 		httpServer.start();
@@ -219,7 +219,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void checkStatusNotAdmin() throws Exception {
 		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_URL, "vcloud-admin"));
+		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_API, "vcloud-admin"));
 		prepareMockHome();
 		httpServer.start();
 		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
@@ -228,8 +228,8 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void checkStatusNotAccess() throws Exception {
 		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_URL, "vcloud-admin"));
-		httpServer.stubFor(post(urlPathEqualTo("/sessions"))
+		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_API, "vcloud-admin"));
+		httpServer.stubFor(post(urlPathEqualTo("/api/sessions"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withHeader("x-vcloud-authorization", "token")));
 		httpServer.start();
 		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
@@ -239,13 +239,13 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Version from "/admin"
-		httpServer.stubFor(get(urlPathEqualTo("/admin")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(
+		httpServer.stubFor(get(urlPathEqualTo("/api/admin")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(
 				IOUtils.toString(new ClassPathResource("mock-server/vcloud/vcloud-admin.xml").getInputStream(), StandardCharsets.UTF_8))));
 		httpServer.start();
 	}
 
 	private void prepareMockHome() {
-		httpServer.stubFor(post(urlPathEqualTo("/sessions"))
+		httpServer.stubFor(post(urlPathEqualTo("/api/sessions"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withHeader("x-vcloud-authorization", "token")));
 	}
 
@@ -262,7 +262,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void getConsole() throws Exception {
 		prepareMockHome();
-		httpServer.stubFor(get(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
+		httpServer.stubFor(get(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
 						new ClassPathResource("mock-server/vcloud/vcloud-console.png").getInputStream(), StandardCharsets.UTF_8))));
 		httpServer.start();
@@ -276,7 +276,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void getConsoleNotAvailable() throws Exception {
 		prepareMockHome();
-		httpServer.stubFor(get(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
+		httpServer.stubFor(get(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK)));
 		httpServer.start();
 
@@ -289,7 +289,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void getConsoleError() throws Exception {
 		prepareMockHome();
-		httpServer.stubFor(get(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
+		httpServer.stubFor(get(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_NO_CONTENT)));
 		httpServer.start();
 
@@ -301,7 +301,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 
 	@Test
 	public void execute() throws Exception {
-		httpServer.stubFor(post(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/power/action/powerOn"))
+		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/power/action/powerOn"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		prepareMockItem();
 		resource.execute(subscription, VmOperation.ON);
@@ -315,11 +315,11 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Find a specific VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
 				new ClassPathResource("mock-server/vcloud/vcloud-query-vm-poweredon.xml").getInputStream(), StandardCharsets.UTF_8))));
 
 		// Stub the undeploy action
-		httpServer.stubFor(post(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
+		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		httpServer.start();
 		resource.execute(subscription, VmOperation.SHUTDOWN);
@@ -333,11 +333,11 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Find a specific VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
 				new ClassPathResource("mock-server/vcloud/vcloud-query-vm-poweredon.xml").getInputStream(), StandardCharsets.UTF_8))));
 
 		// Stub the undeploy action
-		httpServer.stubFor(post(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
+		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		httpServer.start();
 		resource.execute(subscription, VmOperation.OFF);
@@ -351,11 +351,11 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Find a specific VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
 				new ClassPathResource("mock-server/vcloud/vcloud-query-vm-poweredon.xml").getInputStream(), StandardCharsets.UTF_8))));
 
 		// Stub the undeploy action
-		httpServer.stubFor(post(urlPathEqualTo("/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
+		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_BAD_REQUEST).withBody("<Error>...</Error>")));
 		httpServer.start();
 		resource.execute(subscription, VmOperation.OFF);
@@ -369,16 +369,16 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockHome();
 
 		// Find a specific VM
-		httpServer.stubFor(get(urlPathEqualTo("/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
+		httpServer.stubFor(get(urlPathEqualTo("/api/query")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(IOUtils.toString(
 				new ClassPathResource("mock-server/vcloud/vcloud-query-vm-poweredon.xml").getInputStream(), StandardCharsets.UTF_8))));
 		httpServer.start();
 		resource.execute(subscription, VmOperation.ON);
 	}
 
-	private void checkItem(final IDescribableBean<String> item) {
+	private void checkItem(final Vm item) {
 		Assert.assertEquals("75aa69b4-8cff-40cd-9338-9abafc7d5935", item.getId());
 		Assert.assertEquals("sca", item.getName());
-		Assert.assertEquals("CentOS 4/5/6/7 (64-bit)", item.getDescription());
+		Assert.assertEquals("CentOS 4/5/6/7 (64-bit)", item.getOs());
 	}
 
 }

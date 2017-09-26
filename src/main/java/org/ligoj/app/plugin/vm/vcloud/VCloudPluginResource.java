@@ -74,9 +74,16 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	public static final String KEY = URL.replace('/', ':').substring(1);
 
 	/**
-	 * vCloud API base URL.
+	 * vCloud API base URL. Not the portal URL.
 	 * 
-	 * @see "https://flexible-computing-advanced.orange-business.com/api"
+	 * @see "https://api.sample.com/api"
+	 */
+	public static final String PARAMETER_API = KEY + ":api";
+
+	/**
+	 * Optional public portal (vCloud director) URL
+	 * 
+	 * @see "https://sample.com/portal"
 	 */
 	public static final String PARAMETER_URL = KEY + ":url";
 
@@ -235,7 +242,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 					"Authorization:Basic " + authentication));
 			processor.process(requests);
 			return processor.token;
-		}, retries, () -> new ValidationJsonException(PARAMETER_URL, "vcloud-login"));
+		}, retries, () -> new ValidationJsonException(PARAMETER_API, "vcloud-login"));
 	}
 
 	/**
@@ -246,7 +253,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		final String user = parameters.get(PARAMETER_USER);
 		final String password = StringUtils.trimToEmpty(parameters.get(PARAMETER_PASSWORD));
 		final String organization = StringUtils.trimToEmpty(parameters.get(PARAMETER_ORGANIZATION));
-		final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_URL), "/") + "sessions";
+		final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "sessions";
 
 		// Encode the authentication 'user@organization:password'
 		final String authentication = Base64
@@ -320,7 +327,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 
 		// Get the screen thumbnail
 		return output -> {
-			final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_URL), "/") + "vApp/vm-" + parameters.get(PARAMETER_VM)
+			final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-" + parameters.get(PARAMETER_VM)
 					+ "/screen";
 			final CurlRequest curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
 				if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
@@ -341,7 +348,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		final VCloudVm result = new VCloudVm();
 		result.setId(StringUtils.removeStart(record.getAttribute("id"), "urn:vcloud:vm:"));
 		result.setName(record.getAttribute("name"));
-		result.setDescription(record.getAttribute("guestOs"));
+		result.setOs(record.getAttribute("guestOs"));
 
 		// Optional attributes
 		result.setStorageProfileName(record.getAttribute("storageProfileName"));
@@ -380,7 +387,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	protected String authenticateAndExecute(final Map<String, String> parameters, final String method, final String resource) {
 		final VCloudCurlProcessor processor = new VCloudCurlProcessor();
 		authenticate(parameters, processor);
-		return execute(processor, method, parameters.get(PARAMETER_URL), resource);
+		return execute(processor, method, parameters.get(PARAMETER_API), resource);
 	}
 
 	/**
@@ -410,7 +417,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 	 */
 	private void validateAdminAccess(final Map<String, String> parameters) throws Exception {
 		if (getVersion(parameters) == null) {
-			throw new ValidationJsonException(PARAMETER_URL, "vcloud-admin");
+			throw new ValidationJsonException(PARAMETER_API, "vcloud-admin");
 		}
 	}
 
@@ -479,7 +486,7 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 			// The requested operation needs the VM to be undeployed
 			final String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><UndeployVAppParams xmlns=\"http://www.vmware.com/vcloud/v1.5\"><UndeployPowerAction>"
 					+ action + "</UndeployPowerAction></UndeployVAppParams>";
-			final String url = StringUtils.removeEnd(parameters.get(PARAMETER_URL), "/");
+			final String url = StringUtils.removeEnd(parameters.get(PARAMETER_API), "/");
 			final CurlRequest request = new CurlRequest(HttpMethod.POST, url + vmUrl + "/action/undeploy", content,
 					"Content-Type:application/vnd.vmware.vcloud.undeployVAppParams+xml");
 			request.setSaveResponse(true);

@@ -1,5 +1,6 @@
 parameter.id;data;node.id;subscription.id!
-service:vm:vcloud:url;http://localhost:8120;service:vm:vcloud:obs-fca-info;
+service:vm:vcloud:api;http://localhost:8120/api;service:vm:vcloud:obs-fca-info;
+service:vm:vcloud:url;http://localhost:8120/portal;service:vm:vcloud:obs-fca-info;
 service:vm:vcloud:user;secret;service:vm:vcloud:obs-fca-info;
 service:vm:vcloud:password;secret;service:vm:vcloud:obs-fca-info;
 service:vm:vcloud:organization;FCA_GFI-INFO-FCA;service:vm:vcloud:obs-fca-info;
