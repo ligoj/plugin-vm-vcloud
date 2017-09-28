@@ -2,7 +2,6 @@ package org.ligoj.app.plugin.vm.vcloud;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -237,10 +236,10 @@ public class VCloudPluginResource extends AbstractXmlApiToolPluginResource imple
 		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, k -> {
 
 			// Authentication request
-			final List<CurlRequest> requests = new ArrayList<>();
-			requests.add(new CurlRequest(HttpMethod.POST, url, null, VCloudCurlProcessor.LOGIN_CALLBACK,
-					"Authorization:Basic " + authentication));
-			processor.process(requests);
+			final CurlRequest request = new CurlRequest(HttpMethod.POST, url, null, VCloudCurlProcessor.LOGIN_CALLBACK,
+					"Authorization:Basic " + authentication);
+			// TODO Use request.setTimeout(...) with plugin-api 1.1.8+
+			processor.process(Collections.singletonList(request));
 			return processor.token;
 		}, retries, () -> new ValidationJsonException(PARAMETER_API, "vcloud-login"));
 	}
