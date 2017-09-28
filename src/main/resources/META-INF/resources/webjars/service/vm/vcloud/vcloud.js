@@ -17,7 +17,7 @@ define(function () {
 				// Add vDirector link to the home page
 				result += current.$super('renderServicelink')('home', subscription.parameters['service:vm:vcloud:url']
 				 + '/' + subscription.parameters['service:vm:vcloud:organization']
-				 + '/#/vmListPage?', null , null, ' target="_blank"');
+				 + '/#/vmListPage?', null , null, ' target="_blank"', 'vcloud-home');
 			}
 			if (subscription.parameters && subscription.parameters.console) {
 				// Add Console
@@ -40,7 +40,7 @@ define(function () {
 			var vm = subscription.data.vm;
 			if (subscription.parameters && subscription.parameters['service:vm:vcloud:url'] && subscription.parameters['service:vm:vcloud:organization'] && vm.vappId) {
 				// Update vDirector link to the specific vAPP
-				$tr.find('a.feature').attr('href', subscription.parameters['service:vm:vcloud:url'] + '/' + subscription.parameters['service:vm:vcloud:organization'] + '/#/vmList?vapp=' + vm.vappId);
+				$tr.find('a.vcloud-home').attr('href', subscription.parameters['service:vm:vcloud:url'] + '/' + subscription.parameters['service:vm:vcloud:organization'] + '/#/vmList?vapp=' + vm.vappId);
 			}
 
 			return current.$super('generateCarousel')(subscription, [
