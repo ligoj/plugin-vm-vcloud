@@ -1,12 +1,22 @@
-machine:
-  java:
-    version: openjdk8
-dependencies:
- override: 
-  - mvn install -DskipTest=true -DskipITs=true
-test:
-  override:
-    - mvn clean package
-  post:
-    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
-    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+version: 2
+jobs:
+  build:
+    working_directory: ~/circleci-feature9
+    docker:
+      - image: maven:3.5.0-jdk-9
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: circleci-feature9-{{ checksum "pom.xml" }}
+
+      - run: mvn install -DskipTest=true -DskipITs=true
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: circleci-feature9-{{ checksum "pom.xml" }}
+
+      - store_test_results:
+          path: target/surefire-reports
