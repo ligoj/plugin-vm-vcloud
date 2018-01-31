@@ -17,10 +17,10 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.HttpStatus;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.ligoj.app.AbstractServerTest;
 import org.ligoj.app.MatcherUtil;
 import org.ligoj.app.api.SubscriptionStatusWithData;
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
@@ -50,7 +50,7 @@ import net.sf.ehcache.CacheManager;
 /**
  * Test class of {@link VCloudPluginResource}
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = "classpath:/META-INF/spring/application-context-test.xml")
 @Rollback
 @Transactional
@@ -66,7 +66,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 
 	protected int subscription;
 
-	@Before
+	@BeforeEach
 	public void prepareData() throws IOException {
 		// Only with Spring context
 		persistSystemEntities();
@@ -100,14 +100,14 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockVersion();
 
 		final String version = resource.getVersion(subscription);
-		Assert.assertEquals("5.5.4.2831206 Fri Jun 19 15:07:32 CEST 2015", version);
+		Assertions.assertEquals("5.5.4.2831206 Fri Jun 19 15:07:32 CEST 2015", version);
 	}
 
 	@Test
 	public void getLastVersion() throws Exception {
 		final String lastVersion = resource.getLastVersion();
-		Assert.assertNotNull(lastVersion);
-		Assert.assertTrue(lastVersion.compareTo("2017") >= 0);
+		Assertions.assertNotNull(lastVersion);
+		Assertions.assertTrue(lastVersion.compareTo("2017") >= 0);
 	}
 
 	@Test
@@ -124,8 +124,6 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 
 	@Test
 	public void getVmDetailsNotFound() throws Exception {
-		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_VM, "vcloud-vm"));
 		prepareMockHome();
 
 		// Not find VM
@@ -134,7 +132,9 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 
 		final Map<String, String> parameters = new HashMap<>(pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info"));
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "0");
-		resource.getVmDetails(parameters);
+		MatcherUtil.assertThrows(Assertions.assertThrows(ValidationJsonException.class, () -> {
+			resource.getVmDetails(parameters);
+		}), VCloudPluginResource.PARAMETER_VM, "vcloud-vm");
 	}
 
 	@Test
@@ -145,17 +145,17 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "75aa69b4-8cff-40cd-9338-9abafc7d5935");
 		final VCloudVm vm = resource.getVmDetails(parameters);
 		checkVm(vm);
-		Assert.assertTrue(vm.isDeployed());
+		Assertions.assertTrue(vm.isDeployed());
 	}
 
 	private void checkVm(final VCloudVm item) {
 		checkItem(item);
-		Assert.assertEquals("High Performances", item.getStorageProfileName());
-		Assert.assertEquals(VmStatus.POWERED_OFF, item.getStatus());
-		Assert.assertEquals(6, item.getCpu());
-		Assert.assertFalse(item.isBusy());
-		Assert.assertEquals("vApp_BPR", item.getVApp());
-		Assert.assertEquals(28672, item.getRam());
+		Assertions.assertEquals("High Performances", item.getStorageProfileName());
+		Assertions.assertEquals(VmStatus.POWERED_OFF, item.getStatus());
+		Assertions.assertEquals(6, item.getCpu());
+		Assertions.assertFalse(item.isBusy());
+		Assertions.assertEquals("vApp_BPR", item.getVApp());
+		Assertions.assertEquals(28672, item.getRam());
 	}
 
 	@Test
@@ -163,7 +163,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockItem();
 		final SubscriptionStatusWithData nodeStatusWithData = resource.checkSubscriptionStatus(subscription, null,
 				subscriptionResource.getParametersNoCheck(subscription));
-		Assert.assertTrue(nodeStatusWithData.getStatus().isUp());
+		Assertions.assertTrue(nodeStatusWithData.getStatus().isUp());
 		checkVm((VCloudVm) nodeStatusWithData.getData().get("vm"));
 	}
 
@@ -190,16 +190,16 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	public void checkStatus() throws Exception {
 		prepareMockVersion();
-		Assert.assertTrue(resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription)));
+		Assertions.assertTrue(resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription)));
 	}
 
 	@Test
 	public void checkStatusAuthenticationFailed() throws Exception {
-		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_API, "vcloud-login"));
 		httpServer.stubFor(post(urlPathEqualTo("/api/sessions")).willReturn(aResponse().withStatus(HttpStatus.SC_FORBIDDEN)));
 		httpServer.start();
-		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
+		MatcherUtil.assertThrows(Assertions.assertThrows(ValidationJsonException.class, () -> {
+			resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
+		}), VCloudPluginResource.PARAMETER_API, "vcloud-login");
 	}
 
 	@Test
@@ -211,28 +211,28 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withHeader("x-vcloud-authorization", "token")));
 		httpServer.stubFor(get(urlPathEqualTo("/api/admin")).willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody(
 				IOUtils.toString(new ClassPathResource("mock-server/vcloud/vcloud-admin.xml").getInputStream(), StandardCharsets.UTF_8))));
-		Assert.assertTrue(resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription)));
+		Assertions.assertTrue(resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription)));
 		httpServer.start();
 		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
 	}
 
 	@Test
 	public void checkStatusNotAdmin() throws Exception {
-		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_API, "vcloud-admin"));
 		prepareMockHome();
 		httpServer.start();
-		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
+		MatcherUtil.assertThrows(Assertions.assertThrows(ValidationJsonException.class, () -> {
+			resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
+		}), VCloudPluginResource.PARAMETER_API, "vcloud-admin");
 	}
 
 	@Test
 	public void checkStatusNotAccess() throws Exception {
-		thrown.expect(ValidationJsonException.class);
-		thrown.expect(MatcherUtil.validationMatcher(VCloudPluginResource.PARAMETER_API, "vcloud-admin"));
 		httpServer.stubFor(post(urlPathEqualTo("/api/sessions"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withHeader("x-vcloud-authorization", "token")));
 		httpServer.start();
-		resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
+		MatcherUtil.assertThrows(Assertions.assertThrows(ValidationJsonException.class, () -> {
+			resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription));
+		}), VCloudPluginResource.PARAMETER_API, "vcloud-admin");
 	}
 
 	private void prepareMockVersion() throws IOException {
@@ -255,7 +255,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		httpServer.start();
 
 		final List<VCloudVm> projects = resource.findAllByName("service:vm:vcloud:obs-fca-info", "sc");
-		Assert.assertEquals(3, projects.size());
+		Assertions.assertEquals(3, projects.size());
 		checkItem(projects.get(0));
 	}
 
@@ -270,7 +270,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		final StreamingOutput imageStream = resource.getConsole(subscription);
 		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		imageStream.write(outputStream);
-		Assert.assertTrue(outputStream.toByteArray().length > 1024);
+		Assertions.assertTrue(outputStream.toByteArray().length > 1024);
 	}
 
 	@Test
@@ -283,7 +283,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		final StreamingOutput imageStream = resource.getConsole(subscription);
 		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		imageStream.write(outputStream);
-		Assert.assertEquals(0, outputStream.toByteArray().length);
+		Assertions.assertEquals(0, outputStream.toByteArray().length);
 	}
 
 	@Test
@@ -296,7 +296,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		final StreamingOutput imageStream = resource.getConsole(subscription);
 		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		imageStream.write(outputStream);
-		Assert.assertEquals(0, outputStream.toByteArray().length);
+		Assertions.assertEquals(0, outputStream.toByteArray().length);
 	}
 
 	@Test
@@ -346,7 +346,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	/**
 	 * Power Off execution requires an undeploy action.
 	 */
-	@Test(expected = BusinessException.class)
+	@Test
 	public void executeInvalidAction() throws Exception {
 		prepareMockHome();
 
@@ -358,7 +358,9 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_BAD_REQUEST).withBody("<Error>...</Error>")));
 		httpServer.start();
-		resource.execute(subscription, VmOperation.OFF);
+		Assertions.assertEquals("vm-operation-execute", Assertions.assertThrows(BusinessException.class, () -> {
+			resource.execute(subscription, VmOperation.OFF);
+		}).getMessage());
 	}
 
 	/**
@@ -376,9 +378,9 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	private void checkItem(final Vm item) {
-		Assert.assertEquals("75aa69b4-8cff-40cd-9338-9abafc7d5935", item.getId());
-		Assert.assertEquals("sca", item.getName());
-		Assert.assertEquals("CentOS 4/5/6/7 (64-bit)", item.getOs());
+		Assertions.assertEquals("75aa69b4-8cff-40cd-9338-9abafc7d5935", item.getId());
+		Assertions.assertEquals("sca", item.getName());
+		Assertions.assertEquals("CentOS 4/5/6/7 (64-bit)", item.getOs());
 	}
 
 }
