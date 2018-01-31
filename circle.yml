@@ -4,19 +4,21 @@ jobs:
     working_directory: ~/circleci-feature9
     docker:
       - image: maven:3.5-jdk-9-slim
-
     steps:
       - checkout
-
       - restore_cache:
           key: circleci-feature9-{{ checksum "pom.xml" }}
-
-      - run: mvn install -DskipITs=true
-
+      - run:
+          command: |
+            mvn install -DskipITs=true
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
           paths:
             - ~/.m2
           key: circleci-feature9-{{ checksum "pom.xml" }}
-
-      - store_test_results:
-          path: target/surefire-reports
