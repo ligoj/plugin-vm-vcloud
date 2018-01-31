@@ -11,7 +11,7 @@ jobs:
       - restore_cache:
           key: circleci-feature9-{{ checksum "pom.xml" }}
 
-      - run: mvn install -DskipTest=true -DskipITs=true
+      - run: mvn install -DskipITs=true
 
       - save_cache:
           paths:
