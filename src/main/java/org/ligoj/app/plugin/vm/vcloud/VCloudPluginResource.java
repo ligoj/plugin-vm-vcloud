@@ -299,7 +299,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	 * @return virtual machines.
 	 */
 	@GET
-	@Path("{node:[a-z].*}/{criteria}")
+	@Path("{node:service:.+}/{criteria}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public List<VCloudVm> findAllByName(@PathParam("node") final String node, @PathParam("criteria") final String criteria)
 			throws IOException, SAXException, ParserConfigurationException {
