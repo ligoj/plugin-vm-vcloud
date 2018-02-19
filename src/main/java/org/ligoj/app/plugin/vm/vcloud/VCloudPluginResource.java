@@ -34,6 +34,7 @@ import org.ligoj.app.plugin.vm.Vm;
 import org.ligoj.app.plugin.vm.VmResource;
 import org.ligoj.app.plugin.vm.VmServicePlugin;
 import org.ligoj.app.plugin.vm.dao.VmScheduleRepository;
+import org.ligoj.app.plugin.vm.model.VmExecution;
 import org.ligoj.app.plugin.vm.model.VmOperation;
 import org.ligoj.app.plugin.vm.model.VmStatus;
 import org.ligoj.app.resource.plugin.AbstractToolPluginResource;
@@ -110,8 +111,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	private static final Map<VmOperation, String> OPERATION_TO_VCLOUD = new EnumMap<>(VmOperation.class);
 
 	/**
-	 * Mapping table giving the operation to execute depending on the requested
-	 * operation and the status of the VM.
+	 * Mapping table giving the operation to execute depending on the requested operation and the status of the VM.
 	 * <TABLE summary="Mapping Table">
 	 * <THEAD>
 	 * <TR>
@@ -213,7 +213,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	 * </TBODY>
 	 * </TABLE>
 	 */
-	private static final Map<VmStatus, Map<VmOperation, VmOperation>> FAILSAFE_OPERATIONS = new EnumMap<>(VmStatus.class);
+	private static final Map<VmStatus, Map<VmOperation, VmOperation>> FAILSAFE_OPERATIONS = new EnumMap<>(
+			VmStatus.class);
 
 	@Autowired
 	private CurlCacheToken curlCacheToken;
@@ -230,6 +231,9 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	@Value("${saas.service-vm-vcloud-auth-retries:2}")
 	private int retries;
 
+	@Value("${saas.service-vm-vcloud-auth-timeout:5000}")
+	private int timeout;
+
 	@Autowired
 	protected XmlUtils xml;
 
@@ -242,15 +246,16 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 			// Authentication request
 			final CurlRequest request = new CurlRequest(HttpMethod.POST, url, null, VCloudCurlProcessor.LOGIN_CALLBACK,
 					"Authorization:Basic " + authentication);
-			// TODO Use request.setTimeout(...) with plugin-api 1.1.8+
+
+			// Execute with a timeout
+			request.setTimeout(timeout);
 			processor.process(Collections.singletonList(request));
 			return processor.token;
 		}, retries, () -> new ValidationJsonException(PARAMETER_API, "vcloud-login"));
 	}
 
 	/**
-	 * Prepare an authenticated connection to vCloud. The given processor would
-	 * be updated with the security token.
+	 * Prepare an authenticated connection to vCloud. The given processor would be updated with the security token.
 	 */
 	protected void authenticate(final Map<String, String> parameters, final VCloudCurlProcessor processor) {
 		final String user = parameters.get(PARAMETER_USER);
@@ -267,12 +272,13 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	}
 
 	@Override
-	public VCloudVm getVmDetails(final Map<String, String> parameters) throws SAXException, IOException, ParserConfigurationException {
+	public VCloudVm getVmDetails(final Map<String, String> parameters)
+			throws SAXException, IOException, ParserConfigurationException {
 
 		final String id = parameters.get(PARAMETER_VM);
 		// Get the VM if exists
-		final List<VCloudVm> vms = toVms(
-				getVCloudResource(parameters, "/query?type=vm&format=idrecords&filter=id==urn:vcloud:vm:" + id + "&pageSize=1"));
+		final List<VCloudVm> vms = toVms(getVCloudResource(parameters,
+				"/query?type=vm&format=idrecords&filter=id==urn:vcloud:vm:" + id + "&pageSize=1"));
 
 		// Check the VM has been found
 		if (vms.isEmpty()) {
@@ -289,8 +295,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	}
 
 	/**
-	 * Find the virtual machines matching to the given criteria. Look into
-	 * virtual machine name only.
+	 * Find the virtual machines matching to the given criteria. Look into virtual machine name only.
 	 * 
 	 * @param node
 	 *            the node to be tested with given parameters.
@@ -301,7 +306,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	@GET
 	@Path("{node:service:.+}/{criteria}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public List<VCloudVm> findAllByName(@PathParam("node") final String node, @PathParam("criteria") final String criteria)
+	public List<VCloudVm> findAllByName(@PathParam("node") final String node,
+			@PathParam("criteria") final String criteria)
 			throws IOException, SAXException, ParserConfigurationException {
 		// Check the node exists
 		if (nodeRepository.findOneVisible(node, securityHelper.getLogin()) == null) {
@@ -309,8 +315,9 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 		}
 
 		// Get the VMs and parse them
-		return toVms(getVCloudResource(pvResource.getNodeParameters(node),
-				"/query?type=vm&format=idrecords&filter=name==*" + criteria + "*&sortAsc=name&fields=name,guestOs&pageSize=10"));
+		return toVms(
+				getVCloudResource(pvResource.getNodeParameters(node), "/query?type=vm&format=idrecords&filter=name==*"
+						+ criteria + "*&sortAsc=name&fields=name,guestOs&pageSize=10"));
 	}
 
 	/**
@@ -330,8 +337,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 		// Get the screen thumbnail
 		return output -> {
-			final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-" + parameters.get(PARAMETER_VM)
-					+ "/screen";
+			final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
+					+ parameters.get(PARAMETER_VM) + "/screen";
 			final CurlRequest curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
 				if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
 					// Copy the stream
@@ -357,12 +364,14 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 		result.setStorageProfileName(record.getAttribute("storageProfileName"));
 		result.setStatus(EnumUtils.getEnum(VmStatus.class, record.getAttribute("status")));
 		result.setCpu(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("numberOfCpus"))));
-		result.setBusy(Boolean.parseBoolean(ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isBusy")), "false")));
+		result.setBusy(Boolean.parseBoolean(
+				ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isBusy")), "false")));
 		result.setVApp(StringUtils.trimToNull(record.getAttribute("containerName")));
-		result.setVAppId(StringUtils.trimToNull(StringUtils.removeStart(record.getAttribute("container"), "urn:vcloud:vapp:")));
+		result.setVAppId(
+				StringUtils.trimToNull(StringUtils.removeStart(record.getAttribute("container"), "urn:vcloud:vapp:")));
 		result.setRam(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("memoryMB"))));
-		result.setDeployed(
-				Boolean.parseBoolean(ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isDeployed")), "false")));
+		result.setDeployed(Boolean.parseBoolean(
+				ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isDeployed")), "false")));
 		return result;
 	}
 
@@ -371,38 +380,38 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	 */
 	private List<VCloudVm> toVms(final String vmAsXml) throws SAXException, IOException, ParserConfigurationException {
 		final NodeList tags = xml.getTags(vmAsXml, "VMRecord");
-		return IntStream.range(0, tags.getLength()).mapToObj(tags::item).map(n -> (Element) n).map(this::toVm).collect(Collectors.toList());
+		return IntStream.range(0, tags.getLength()).mapToObj(tags::item).map(n -> (Element) n).map(this::toVm)
+				.collect(Collectors.toList());
 	}
 
 	/**
-	 * Return a vCloud's resource after an authentication. Return
-	 * <code>null</code> when the resource is not found. Authentication will be
-	 * done to get the data.
+	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
+	 * Authentication will be done to get the data.
 	 */
 	protected String getVCloudResource(final Map<String, String> parameters, final String resource) {
 		return authenticateAndExecute(parameters, HttpMethod.GET, resource);
 	}
 
 	/**
-	 * Return a vCloud's resource after an authentication. Return
-	 * <code>null</code> when the resource is not found. Authentication is
-	 * started from there.
+	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
+	 * Authentication is started from there.
 	 */
-	protected String authenticateAndExecute(final Map<String, String> parameters, final String method, final String resource) {
+	protected String authenticateAndExecute(final Map<String, String> parameters, final String method,
+			final String resource) {
 		final VCloudCurlProcessor processor = new VCloudCurlProcessor();
 		authenticate(parameters, processor);
 		return execute(processor, method, parameters.get(PARAMETER_API), resource);
 	}
 
 	/**
-	 * Return/execute a vCloud resource. Return <code>null</code> when the
-	 * resource is not found. Authentication should be proceeded before for
-	 * authenticated query.
+	 * Return/execute a vCloud resource. Return <code>null</code> when the resource is not found. Authentication should
+	 * be proceeded before for authenticated query.
 	 */
-	protected String execute(final CurlProcessor processor, final String method, final String url, final String resource) {
+	protected String execute(final CurlProcessor processor, final String method, final String url,
+			final String resource) {
 		// Get the resource using the preempted authentication
-		final CurlRequest request = new CurlRequest(method, StringUtils.appendIfMissing(url, "/") + StringUtils.removeStart(resource, "/"),
-				null);
+		final CurlRequest request = new CurlRequest(method,
+				StringUtils.appendIfMissing(url, "/") + StringUtils.removeStart(resource, "/"), null);
 		request.setSaveResponse(true);
 
 		// Execute the requests
@@ -428,8 +437,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	@Override
 	public String getVersion(final Map<String, String> parameters) throws Exception {
 		return StringUtils.trimToNull(
-				xml.getTags(ObjectUtils.defaultIfNull(getVCloudResource(parameters, "/admin"), "<a><Description/></a>"), "Description").item(0)
-						.getTextContent());
+				xml.getTags(ObjectUtils.defaultIfNull(getVCloudResource(parameters, "/admin"), "<a><Description/></a>"),
+						"Description").item(0).getTextContent());
 	}
 
 	@Override
@@ -442,11 +451,11 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 		// content format, but the links
 		// Search for : "target":
 		// "./info/slug/datacenter_cloud_infrastructure/vmware_vcloud_suite/6_0"
-		final int linkIndex = Math.min(
-				ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/") + "vmware_vcloud_suite/".length(),
-				portletVersions.length());
-		return portletVersions.substring(linkIndex, Math.min(Math.max(portletVersions.indexOf('#', linkIndex), linkIndex),
-				Math.max(portletVersions.indexOf('\"', linkIndex), linkIndex)));
+		final int linkIndex = Math.min(ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/")
+				+ "vmware_vcloud_suite/".length(), portletVersions.length());
+		return portletVersions.substring(linkIndex,
+				Math.min(Math.max(portletVersions.indexOf('#', linkIndex), linkIndex),
+						Math.max(portletVersions.indexOf('\"', linkIndex), linkIndex)));
 	}
 
 	@Override
@@ -466,7 +475,9 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	}
 
 	@Override
-	public void execute(final int subscription, final VmOperation operation) throws Exception {
+	public void execute(final VmExecution execution) throws Exception {
+		final int subscription = execution.getSubscription().getId();
+		final VmOperation operation = execution.getOperation();
 		final Map<String, String> parameters = subscriptionResource.getParametersNoCheck(subscription);
 		final String vmUrl = "/vApp/vm-" + parameters.get(PARAMETER_VM);
 
@@ -474,16 +485,21 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 		final VCloudVm vm = getVmDetails(parameters);
 		final VmStatus status = vm.getStatus();
 
+		// Share the VM name to the execution
+		execution.setVm(vm.getName());
+
 		// Get the right operation depending on the current state
 		final VmOperation operationF = failSafeOperation(status, operation);
+		execution.setOperation(operationF);
 		if (operationF == null) {
 			// Final operation is considered as useless
-			log.info("Requested operation {} is marked as useless considering the status {} of vm {}", operation, status,
-					parameters.get(PARAMETER_VM));
+			log.info("Requested operation {} is marked as useless considering the status {} of vm {}", operation,
+					status, parameters.get(PARAMETER_VM));
 			return;
 		}
 
-		final String action = MapUtils.getObject(OPERATION_TO_VCLOUD, operationF, operationF.name().toLowerCase(Locale.ENGLISH));
+		final String action = MapUtils.getObject(OPERATION_TO_VCLOUD, operationF,
+				operationF.name().toLowerCase(Locale.ENGLISH));
 
 		// Check if undeployment is requested to shutdown completely the VM
 		if (operationF == VmOperation.SHUTDOWN || operationF == VmOperation.OFF) {
@@ -506,13 +522,13 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 			checkSchedulerResponse(request.getResponse());
 		} else {
 			// Operation does not require to undeploy the VM
-			checkSchedulerResponse(authenticateAndExecute(parameters, HttpMethod.POST, vmUrl + "/power/action/" + action));
+			checkSchedulerResponse(
+					authenticateAndExecute(parameters, HttpMethod.POST, vmUrl + "/power/action/" + action));
 		}
 	}
 
 	/**
-	 * Check the response is valid. For now, the response must not be
-	 * <code>null</code>.
+	 * Check the response is valid. For now, the response must not be <code>null</code>.
 	 */
 	private void checkSchedulerResponse(final String response) {
 		if (response == null) {
@@ -522,16 +538,15 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	}
 
 	/**
-	 * Decide the best operation suiting to the required operation and depending
-	 * on the current status of the virtual machine.
+	 * Decide the best operation suiting to the required operation and depending on the current status of the virtual
+	 * machine.
 	 * 
 	 * @param status
 	 *            The current status of the VM.
 	 * @param operation
 	 *            The requested operation.
-	 * @return The failsafe operation suiting to the current status of the VM.
-	 *         Return <code>null</code> when the computed operation is
-	 *         irreleavant.
+	 * @return The failsafe operation suiting to the current status of the VM. Return <code>null</code> when the
+	 *         computed operation is irreleavant.
 	 */
 	protected VmOperation failSafeOperation(final VmStatus status, final VmOperation operation) {
 		if (FAILSAFE_OPERATIONS.get(status).containsKey(operation)) {
@@ -553,7 +568,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	 * @param operationFailSafe
 	 *            The computed operation.
 	 */
-	private void registerOperation(final VmStatus status, final VmOperation operation, final VmOperation operationFailSafe) {
+	private void registerOperation(final VmStatus status, final VmOperation operation,
+			final VmOperation operationFailSafe) {
 		FAILSAFE_OPERATIONS.computeIfAbsent(status, s -> new EnumMap<>(VmOperation.class));
 		FAILSAFE_OPERATIONS.get(status).put(operation, operationFailSafe);
 	}
