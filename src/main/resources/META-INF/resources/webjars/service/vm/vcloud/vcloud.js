@@ -24,7 +24,7 @@ define(function () {
 				result += '<button class="btn-link" data-toggle="popover" data-html="true" data-content="<img src=';
 				result += '\'rest/service/vm/vcloud/' + subscription.id + '/console.png\'';
 				result += '></img>"><span data-toggle="tooltip" title="' + current.$messages['service:vm:vcloud:console'];
-				result += '" class="fa-stack"><i class="fa fa-square fa-stack-1x"></i><i class="fa fa-terminal fa-stack-1x fa-inverse"></i></span></button>';
+				result += '" class="fa-stack"><i class="fas fa-square fa-stack-1x"></i><i class="fas fa-terminal fa-stack-1x fa-inverse"></i></span></button>';
 			}
 			return result;
 		},
