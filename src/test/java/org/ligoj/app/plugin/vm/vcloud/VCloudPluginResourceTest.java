@@ -47,8 +47,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
-import net.sf.ehcache.CacheManager;
-
 /**
  * Test class of {@link VCloudPluginResource}
  */
@@ -83,7 +81,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		resource.getKey();
 
 		// Invalidate vCloud cache
-		CacheManager.getInstance().getCache("curl-tokens").removeAll();
+		clearAllCache();;
 	}
 
 	/**
