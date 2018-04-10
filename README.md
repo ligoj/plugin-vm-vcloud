@@ -9,7 +9,7 @@
 [![Quality Gate](https://sonarcloud.io/api/badges/gate?key=org.ligoj.plugin:plugin-vm-vcloud)](https://sonarcloud.io/dashboard/index/org.ligoj.plugin:plugin-vm-vcloud)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/bf9de68591ad4b70a3bfb515159b9831)](https://www.codacy.com/app/ligoj/plugin-vm-vcloud?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ligoj/plugin-vm-vcloud&amp;utm_campaign=Badge_Grade)
 [![CodeFactor](https://www.codefactor.io/repository/github/ligoj/plugin-vm-vcloud/badge)](https://www.codefactor.io/repository/github/ligoj/plugin-vm-vcloud)
-[![License](http://img.shields.io/:license-mit-blue.svg)](http://gus.mit-license.org/)
+[![License](http://img.shields.io/:license-mit-blue.svg)](http://fabdouglas.mit-license.org/)
 
 [Ligoj](https://github.com/ligoj/ligoj) EC2 AWS plugin, and extending [VM plugin](https://github.com/ligoj/plugin-vm)
 Provides the following features :
