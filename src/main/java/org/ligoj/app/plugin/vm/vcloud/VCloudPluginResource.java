@@ -76,14 +76,14 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 	/**
 	 * vCloud API base URL. Not the portal URL.
-	 * 
+	 *
 	 * @see "https://api.sample.com/api"
 	 */
 	public static final String PARAMETER_API = KEY + ":api";
 
 	/**
 	 * Optional public portal (vCloud director) URL
-	 * 
+	 *
 	 * @see "https://sample.com/portal"
 	 */
 	public static final String PARAMETER_URL = KEY + ":url";
@@ -296,7 +296,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 	/**
 	 * Find the virtual machines matching to the given criteria. Look into virtual machine name only.
-	 * 
+	 *
 	 * @param node
 	 *            the node to be tested with given parameters.
 	 * @param criteria
@@ -322,7 +322,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 	/**
 	 * Return a snapshot of the console.
-	 * 
+	 *
 	 * @param subscription
 	 *            the valid screenshot of the console.
 	 * @return the valid screenshot of the console.
@@ -444,18 +444,21 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	@Override
 	public String getLastVersion() {
 		// Get the download json from the default repository
-		final String portletVersions = new CurlProcessor().get(
-				"https://my.vmware.com/web/vmware/downloads?p_p_id=ProductIndexPortlet_WAR_itdownloadsportlet&p_p_lifecycle=2&p_p_resource_id=allProducts");
+		try (CurlProcessor curl = new CurlProcessor()) {
+			final String portletVersions = curl.get(
+					"https://my.vmware.com/web/vmware/downloads?p_p_id=ProductIndexPortlet_WAR_itdownloadsportlet&p_p_lifecycle=2&p_p_resource_id=allProducts");
 
-		// Extract the version from the rw String, because of the non stable
-		// content format, but the links
-		// Search for : "target":
-		// "./info/slug/datacenter_cloud_infrastructure/vmware_vcloud_suite/6_0"
-		final int linkIndex = Math.min(ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/")
-				+ "vmware_vcloud_suite/".length(), portletVersions.length());
-		return portletVersions.substring(linkIndex,
-				Math.min(Math.max(portletVersions.indexOf('#', linkIndex), linkIndex),
-						Math.max(portletVersions.indexOf('\"', linkIndex), linkIndex)));
+			// Extract the version from the rw String, because of the non stable
+			// content format, but the links
+			// Search for : "target":
+			// "./info/slug/datacenter_cloud_infrastructure/vmware_vcloud_suite/6_0"
+			final int linkIndex = Math
+					.min(ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/")
+							+ "vmware_vcloud_suite/".length(), portletVersions.length());
+			return portletVersions.substring(linkIndex,
+					Math.min(Math.max(portletVersions.indexOf('#', linkIndex), linkIndex),
+							Math.max(portletVersions.indexOf('\"', linkIndex), linkIndex)));
+		}
 	}
 
 	@Override
@@ -540,7 +543,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	/**
 	 * Decide the best operation suiting to the required operation and depending on the current status of the virtual
 	 * machine.
-	 * 
+	 *
 	 * @param status
 	 *            The current status of the VM.
 	 * @param operation
@@ -560,7 +563,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 	/**
 	 * Register a mapping Status+operation to operation.
-	 * 
+	 *
 	 * @param status
 	 *            The current status.
 	 * @param operation
