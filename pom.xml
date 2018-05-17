@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>org.ligoj.api</groupId>
 		<artifactId>plugin-parent</artifactId>
-		<version>2.4.2</version>
+		<version>2.4.3</version>
 		<relativePath />
 	</parent>
 
 	<groupId>org.ligoj.plugin</groupId>
 	<artifactId>plugin-vm-vcloud</artifactId>
-	<version>1.1.9-SNAPSHOT</version>
+	<version>1.1.9</version>
 	<packaging>jar</packaging>
 	<name>Ligoj - Plugin VM vCloud (VMWare) API 5.1+</name>
 
