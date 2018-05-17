@@ -1,6 +1,6 @@
 package org.ligoj.app.plugin.vm.vcloud;
 
-import org.ligoj.app.plugin.vm.Vm;
+import org.ligoj.app.plugin.vm.execution.Vm;
 
 import lombok.Getter;
 import lombok.Setter;
