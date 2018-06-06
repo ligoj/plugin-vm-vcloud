@@ -81,7 +81,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 		resource.getKey();
 
 		// Invalidate vCloud cache
-		clearAllCache();;
+		clearAllCache();
 	}
 
 	/**
