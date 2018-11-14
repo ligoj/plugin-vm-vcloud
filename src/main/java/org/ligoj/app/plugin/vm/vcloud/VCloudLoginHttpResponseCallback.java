@@ -5,8 +5,8 @@ import java.io.IOException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.message.BasicHeader;
-import org.ligoj.app.resource.plugin.CurlRequest;
-import org.ligoj.app.resource.plugin.DefaultHttpResponseCallback;
+import org.ligoj.bootstrap.core.curl.CurlRequest;
+import org.ligoj.bootstrap.core.curl.DefaultHttpResponseCallback;
 
 /**
  * vCloud login response handler saving the "x-vcloud-authorization".

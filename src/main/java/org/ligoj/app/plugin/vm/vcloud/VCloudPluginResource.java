@@ -38,10 +38,10 @@ import org.ligoj.app.plugin.vm.model.VmExecution;
 import org.ligoj.app.plugin.vm.model.VmOperation;
 import org.ligoj.app.plugin.vm.model.VmStatus;
 import org.ligoj.app.resource.plugin.AbstractToolPluginResource;
-import org.ligoj.app.resource.plugin.CurlCacheToken;
-import org.ligoj.app.resource.plugin.CurlProcessor;
-import org.ligoj.app.resource.plugin.CurlRequest;
 import org.ligoj.app.resource.plugin.XmlUtils;
+import org.ligoj.bootstrap.core.curl.CurlCacheToken;
+import org.ligoj.bootstrap.core.curl.CurlProcessor;
+import org.ligoj.bootstrap.core.curl.CurlRequest;
 import org.ligoj.bootstrap.core.resource.BusinessException;
 import org.ligoj.bootstrap.core.security.SecurityHelper;
 import org.ligoj.bootstrap.core.validation.ValidationJsonException;
@@ -488,8 +488,9 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 		final VCloudVm vm = getVmDetails(parameters);
 		final VmStatus status = vm.getStatus();
 
-		// Share the VM name to the execution
+		// Share the VM name and current status to the execution
 		execution.setVm(vm.getName());
+		execution.setPreviousState(status);
 
 		// Get the right operation depending on the current state
 		final VmOperation operationF = failSafeOperation(status, operation);
