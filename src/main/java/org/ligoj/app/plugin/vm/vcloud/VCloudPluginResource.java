@@ -62,7 +62,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class VCloudPluginResource extends AbstractToolPluginResource implements VmExecutionServicePlugin, InitializingBean {
+public class VCloudPluginResource extends AbstractToolPluginResource
+		implements VmExecutionServicePlugin, InitializingBean {
 
 	/**
 	 * Plug-in key.
@@ -239,6 +240,14 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 	/**
 	 * Cache the API token.
+	 *
+	 * @param url
+	 *            The remote URL. Trailing <code>/</code> is removed.
+	 * @param authentication
+	 *            Credential.
+	 * @param processor
+	 *            The CURL processor with pre-authenticated token.
+	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
 	protected String authenticate(final String url, final String authentication, final VCloudCurlProcessor processor) {
 		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, k -> {
@@ -387,6 +396,12 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	/**
 	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
 	 * Authentication will be done to get the data.
+	 *
+	 * @param parameters
+	 *            The subscription parameters.
+	 * @param resource
+	 *            The remote vCloud resource.
+	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
 	protected String getVCloudResource(final Map<String, String> parameters, final String resource) {
 		return authenticateAndExecute(parameters, HttpMethod.GET, resource);
@@ -395,6 +410,12 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	/**
 	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
 	 * Authentication is started from there.
+	 *
+	 * @param parameters
+	 *            The subscription parameters.
+	 * @param resource
+	 *            The remote resource.
+	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
 	protected String authenticateAndExecute(final Map<String, String> parameters, final String method,
 			final String resource) {
@@ -406,6 +427,16 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 	/**
 	 * Return/execute a vCloud resource. Return <code>null</code> when the resource is not found. Authentication should
 	 * be proceeded before for authenticated query.
+	 *
+	 * @param processor
+	 *            The CURL processor with pre-authenticated token.
+	 * @param method
+	 *            HTTP method.
+	 * @param url
+	 *            The remote URL. Trailing <code>/</code> is removed.
+	 * @param resource
+	 *            The remote resource.
+	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
 	protected String execute(final CurlProcessor processor, final String method, final String url,
 			final String resource) {
@@ -427,6 +458,11 @@ public class VCloudPluginResource extends AbstractToolPluginResource implements 
 
 	/**
 	 * Check the server is available with administration right.
+	 *
+	 * @param parameters
+	 *            Subscription parameters.
+	 * @throws Exception
+	 *             when version cannot be retrieved.
 	 */
 	private void validateAdminAccess(final Map<String, String> parameters) throws Exception {
 		if (getVersion(parameters) == null) {
