@@ -2,7 +2,7 @@
 <VCloud xmlns="http://www.vmware.com/vcloud/v1.5" name="VMware vCloud Director" type="application/vnd.vmware.admin.vcloud+xml" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vmware.com/vcloud/v1.5 http://api.flexible-computing-advanced.orange-business.com/api/v1.5/schema/master.xsd">
     <Description>5.5.4.2831206 Fri Jun 19 15:07:32 CEST 2015</Description>
     <OrganizationReferences>
-        <OrganizationReference type="application/vnd.vmware.admin.organization+xml" name="FCA_GFI-INFO-FCA" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/org/aa0d901c-c6e3-4a40-ac3f-6b8b7ec6d2ed"/>
+        <OrganizationReference type="application/vnd.vmware.admin.organization+xml" name="FCA-INFO-FCA" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/org/aa0d901c-c6e3-4a40-ac3f-6b8b7ec6d2ed"/>
     </OrganizationReferences>
     <RightReferences>
         <RightReference type="application/vnd.vmware.admin.right+xml" name="Catalog: Add vApp from My Cloud" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/right/4886663f-ae31-37fc-9a70-3dbe2f24a8c5"/>
@@ -68,6 +68,6 @@
         <RoleReference type="application/vnd.vmware.admin.role+xml" name="vApp User" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/role/ff1e0c91-1288-3664-82b7-a6fa303af4d1"/>
         <RoleReference type="application/vnd.vmware.admin.role+xml" name="Console Access Only" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/role/ae910740-cbde-34ae-9d84-ef5c53880afe"/>
         <RoleReference type="application/vnd.vmware.admin.role+xml" name="Read Only User" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/role/14519029-e0c2-46bb-beac-6716883292cf"/>
-        <RoleReference type="application/vnd.vmware.admin.role+xml" name="vApp Admin Gfi" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/role/b8da71ed-d3c2-48f7-ab9b-36aeefe64bf9"/>
+        <RoleReference type="application/vnd.vmware.admin.role+xml" name="vApp Admin" href="https://api.flexible-computing-advanced.orange-business.com/api/admin/role/b8da71ed-d3c2-48f7-ab9b-36aeefe64bf9"/>
     </RoleReferences>
 </VCloud>
