@@ -4,7 +4,7 @@
 [![Build Status](https://circleci.com/gh/ligoj/plugin-vm-vcloud.svg?style=svg)](https://circleci.com/gh/ligoj/plugin-vm-vcloud)
 [![Build Status](https://semaphoreci.com/api/v1/ligoj/plugin-vm-vcloud/branches/master/shields_badge.svg)](https://semaphoreci.com/ligoj/plugin-vm-vcloud)
 [![Build Status](https://ci.appveyor.com/api/projects/status/sjkjcqvbwf7u075a/branch/master?svg=true)](https://ci.appveyor.com/project/ligoj/plugin-vm-vcloud/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/ligoj/plugin-vm-vcloud/badge.svg?branch=master)](https://coveralls.io/github/ligoj/plugin-vm-vcloud?branch=master)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=org.ligoj.plugin%3plugin-vm-vcloud&metric=coverage)](https://sonarcloud.io/component_measures/metric/coverage/list?id=org.ligoj.plugin%3plugin-vm-vcloud)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?metric=alert_status&project=org.ligoj.plugin:plugin-vm-vcloud)](https://sonarcloud.io/dashboard/index/org.ligoj.plugin:plugin-vm-vcloud)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/bf9de68591ad4b70a3bfb515159b9831)](https://www.codacy.com/app/ligoj/plugin-vm-vcloud?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ligoj/plugin-vm-vcloud&amp;utm_campaign=Badge_Grade)
 [![CodeFactor](https://www.codefactor.io/repository/github/ligoj/plugin-vm-vcloud/badge)](https://www.codefactor.io/repository/github/ligoj/plugin-vm-vcloud)
