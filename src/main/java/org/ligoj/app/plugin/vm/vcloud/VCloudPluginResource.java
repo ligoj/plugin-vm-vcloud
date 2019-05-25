@@ -112,8 +112,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	private static final Map<VmOperation, String> OPERATION_TO_VCLOUD = new EnumMap<>(VmOperation.class);
 
 	/**
-	 * Mapping table giving the operation to execute depending on the requested
-	 * operation and the status of the VM.
+	 * Mapping table giving the operation to execute depending on the requested operation and the status of the VM.
 	 * <TABLE summary="Mapping Table">
 	 * <THEAD>
 	 * <TR>
@@ -262,8 +261,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Prepare an authenticated connection to vCloud. The given processor would be
-	 * updated with the security token.
+	 * Prepare an authenticated connection to vCloud. The given processor would be updated with the security token.
 	 */
 	private void authenticate(final Map<String, String> parameters, final VCloudCurlProcessor processor) {
 		final String user = parameters.get(PARAMETER_USER);
@@ -303,14 +301,12 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Find the virtual machines matching to the given criteria. Look into virtual
-	 * machine name only.
+	 * Find the virtual machines matching to the given criteria. Look into virtual machine name only.
 	 *
 	 * @param node     the node to be tested with given parameters.
 	 * @param criteria the search criteria. Case is insensitive.
 	 * @return virtual machines.
-	 * @throws IOException                  When VM definition XML cannot be
-	 *                                      retrieved.
+	 * @throws IOException                  When VM definition XML cannot be retrieved.
 	 * @throws SAXException                 When the XML validation failed.
 	 * @throws ParserConfigurationException When the XML parsing failed.
 	 */
@@ -395,8 +391,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Return a vCloud's resource after an authentication. Return <code>null</code>
-	 * when the resource is not found. Authentication will be done to get the data.
+	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
+	 * Authentication will be done to get the data.
 	 *
 	 * @param parameters The subscription parameters.
 	 * @param resource   The remote vCloud resource.
@@ -407,8 +403,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Return a vCloud's resource after an authentication. Return <code>null</code>
-	 * when the resource is not found. Authentication is started from there.
+	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
+	 * Authentication is started from there.
 	 *
 	 * @param parameters The subscription parameters.
 	 * @param method     The HTTP method.
@@ -423,9 +419,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Return/execute a vCloud resource. Return <code>null</code> when the resource
-	 * is not found. Authentication should be proceeded before for authenticated
-	 * query.
+	 * Return/execute a vCloud resource. Return <code>null</code> when the resource is not found. Authentication should
+	 * be proceeded before for authenticated query.
 	 *
 	 * @param processor The CURL processor with pre-authenticated token.
 	 * @param method    HTTP method.
@@ -561,8 +556,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Check the response is valid. For now, the response must not be
-	 * <code>null</code>.
+	 * Check the response is valid. For now, the response must not be <code>null</code>.
 	 */
 	private void checkSchedulerResponse(final String response) {
 		if (response == null) {
@@ -572,13 +566,13 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Decide the best operation suiting to the required operation and depending on
-	 * the current status of the virtual machine.
+	 * Decide the best operation suiting to the required operation and depending on the current status of the virtual
+	 * machine.
 	 *
 	 * @param status    The current status of the VM.
 	 * @param operation The requested operation.
-	 * @return The failsafe operation suiting to the current status of the VM.
-	 *         Return <code>null</code> when the computed operation is irreleavant.
+	 * @return The failsafe operation suiting to the current status of the VM. Return <code>null</code> when the
+	 *         computed operation is irreleavant.
 	 */
 	private VmOperation failSafeOperation(final VmStatus status, final VmOperation operation) {
 		if (FAILSAFE_OPERATIONS.get(status).containsKey(operation)) {
