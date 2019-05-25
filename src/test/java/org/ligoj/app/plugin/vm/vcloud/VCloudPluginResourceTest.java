@@ -54,7 +54,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 @ContextConfiguration(locations = "classpath:/META-INF/spring/application-context-test.xml")
 @Rollback
 @Transactional
-public class VCloudPluginResourceTest extends AbstractServerTest {
+class VCloudPluginResourceTest extends AbstractServerTest {
 	@Autowired
 	private VCloudPluginResource resource;
 
@@ -70,7 +70,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	protected int subscription;
 
 	@BeforeEach
-	public void prepareData() throws IOException {
+	void prepareData() throws IOException {
 		// Only with Spring context
 		persistSystemEntities();
 		persistEntities("csv", new Class[] { Node.class, Parameter.class, Project.class, Subscription.class,
@@ -87,17 +87,17 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	/**
 	 * Return the subscription identifier of the given project. Assumes there is only one subscription for a service.
 	 */
-	protected int getSubscription(final String project) {
+	private int getSubscription(final String project) {
 		return getSubscription(project, VCloudPluginResource.KEY);
 	}
 
 	@Test
-	public void delete() throws Exception {
+	void delete() throws Exception {
 		resource.delete(subscription, false);
 	}
 
 	@Test
-	public void getVersion() throws Exception {
+	void getVersion() throws Exception {
 		prepareMockVersion();
 
 		final String version = resource.getVersion(subscription);
@@ -105,14 +105,14 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void getLastVersion() {
+	void getLastVersion() {
 		final String lastVersion = resource.getLastVersion();
 		Assertions.assertNotNull(lastVersion);
 		Assertions.assertTrue(lastVersion.compareTo("2017") >= 0);
 	}
 
 	@Test
-	public void link() throws Exception {
+	void link() throws Exception {
 		prepareMockItem();
 		httpServer.start();
 
@@ -124,7 +124,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void getVmDetailsNotFound() {
+	void getVmDetailsNotFound() {
 		prepareMockHome();
 
 		// Not find VM
@@ -141,7 +141,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void getVmDetails() throws Exception {
+	void getVmDetails() throws Exception {
 		prepareMockItem();
 
 		final Map<String, String> parameters = new HashMap<>(
@@ -164,7 +164,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void checkSubscriptionStatus() throws Exception {
+	void checkSubscriptionStatus() throws Exception {
 		prepareMockItem();
 		final SubscriptionStatusWithData nodeStatusWithData = resource.checkSubscriptionStatus(subscription, null,
 				subscriptionResource.getParametersNoCheck(subscription));
@@ -197,13 +197,13 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void checkStatus() throws Exception {
+	void checkStatus() throws Exception {
 		prepareMockVersion();
 		Assertions.assertTrue(resource.checkStatus(subscriptionResource.getParametersNoCheck(subscription)));
 	}
 
 	@Test
-	public void checkStatusAuthenticationFailed() {
+	void checkStatusAuthenticationFailed() {
 		httpServer.stubFor(
 				post(urlPathEqualTo("/api/sessions")).willReturn(aResponse().withStatus(HttpStatus.SC_FORBIDDEN)));
 		httpServer.start();
@@ -213,7 +213,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void checkStatusAuthenticationFailedThenSucceed() throws Exception {
+	void checkStatusAuthenticationFailedThenSucceed() throws Exception {
 		prepareMockVersion();
 		httpServer.stubFor(
 				post(urlPathEqualTo("/api/api/sessions")).inScenario("auth").whenScenarioStateIs(Scenario.STARTED)
@@ -231,7 +231,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void checkStatusNotAdmin() {
+	void checkStatusNotAdmin() {
 		prepareMockHome();
 		httpServer.start();
 		MatcherUtil.assertThrows(Assertions.assertThrows(ValidationJsonException.class, () -> {
@@ -240,7 +240,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void checkStatusNotAccess() {
+	void checkStatusNotAccess() {
 		httpServer.stubFor(post(urlPathEqualTo("/api/sessions"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withHeader("x-vcloud-authorization", "token")));
 		httpServer.start();
@@ -267,7 +267,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void findAllByName() throws Exception {
+	void findAllByName() throws Exception {
 		prepareMockFindAll();
 		httpServer.start();
 
@@ -277,7 +277,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void findAllByNameNoRight() throws Exception {
+	void findAllByNameNoRight() throws Exception {
 		prepareMockFindAll();
 		initSpringSecurityContext("any");
 		httpServer.start();
@@ -285,7 +285,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void getConsole() throws Exception {
+	void getConsole() throws Exception {
 		prepareMockHome();
 		httpServer.stubFor(get(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK)
@@ -301,7 +301,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void getConsoleNotAvailable() throws Exception {
+	void getConsoleNotAvailable() throws Exception {
 		prepareMockHome();
 		httpServer.stubFor(get(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK)));
@@ -314,7 +314,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void getConsoleError() throws Exception {
+	void getConsoleError() throws Exception {
 		prepareMockHome();
 		httpServer.stubFor(get(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/screen"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_NO_CONTENT)));
@@ -327,7 +327,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	@Test
-	public void execute() throws Exception {
+	void execute() throws Exception {
 		httpServer
 				.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/power/action/powerOn"))
 						.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
@@ -351,7 +351,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	 * Shutdown execution requires an undeploy action.
 	 */
 	@Test
-	public void executeShutDown() throws Exception {
+	void executeShutDown() throws Exception {
 		prepareMockHome();
 
 		// Find a specific VM
@@ -376,7 +376,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	 * Reset a powered off VM
 	 */
 	@Test
-	public void executeReset() throws Exception {
+	void executeReset() throws Exception {
 		prepareMockHome();
 
 		// Find a specific VM
@@ -400,7 +400,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	 * Power Off execution requires an undeploy action.
 	 */
 	@Test
-	public void executeOff() throws Exception {
+	void executeOff() throws Exception {
 		prepareMockHome();
 
 		// Find a specific VM
@@ -425,7 +425,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	 * Power Off execution requires an undeploy action.
 	 */
 	@Test
-	public void executeInvalidAction() throws Exception {
+	void executeInvalidAction() throws Exception {
 		prepareMockHome();
 
 		// Find a specific VM
@@ -447,7 +447,7 @@ public class VCloudPluginResourceTest extends AbstractServerTest {
 	 * Shutdown execution on VM that is already powered off.
 	 */
 	@Test
-	public void executeUselessAction() throws Exception {
+	void executeUselessAction() throws Exception {
 		prepareMockHome();
 
 		// Find a specific VM

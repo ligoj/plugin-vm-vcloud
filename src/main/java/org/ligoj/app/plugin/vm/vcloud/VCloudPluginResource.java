@@ -112,7 +112,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	private static final Map<VmOperation, String> OPERATION_TO_VCLOUD = new EnumMap<>(VmOperation.class);
 
 	/**
-	 * Mapping table giving the operation to execute depending on the requested operation and the status of the VM.
+	 * Mapping table giving the operation to execute depending on the requested
+	 * operation and the status of the VM.
 	 * <TABLE summary="Mapping Table">
 	 * <THEAD>
 	 * <TR>
@@ -241,15 +242,12 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	/**
 	 * Cache the API token.
 	 *
-	 * @param url
-	 *            The remote URL. Trailing <code>/</code> is removed.
-	 * @param authentication
-	 *            Credential.
-	 * @param processor
-	 *            The CURL processor with pre-authenticated token.
+	 * @param url            The remote URL. Trailing <code>/</code> is removed.
+	 * @param authentication Credential.
+	 * @param processor      The CURL processor with pre-authenticated token.
 	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
-	protected String authenticate(final String url, final String authentication, final VCloudCurlProcessor processor) {
+	private String authenticate(final String url, final String authentication, final VCloudCurlProcessor processor) {
 		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, k -> {
 
 			// Authentication request
@@ -264,9 +262,10 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Prepare an authenticated connection to vCloud. The given processor would be updated with the security token.
+	 * Prepare an authenticated connection to vCloud. The given processor would be
+	 * updated with the security token.
 	 */
-	protected void authenticate(final Map<String, String> parameters, final VCloudCurlProcessor processor) {
+	private void authenticate(final Map<String, String> parameters, final VCloudCurlProcessor processor) {
 		final String user = parameters.get(PARAMETER_USER);
 		final String password = StringUtils.trimToEmpty(parameters.get(PARAMETER_PASSWORD));
 		final String organization = StringUtils.trimToEmpty(parameters.get(PARAMETER_ORGANIZATION));
@@ -304,13 +303,16 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Find the virtual machines matching to the given criteria. Look into virtual machine name only.
+	 * Find the virtual machines matching to the given criteria. Look into virtual
+	 * machine name only.
 	 *
-	 * @param node
-	 *            the node to be tested with given parameters.
-	 * @param criteria
-	 *            the search criteria. Case is insensitive.
+	 * @param node     the node to be tested with given parameters.
+	 * @param criteria the search criteria. Case is insensitive.
 	 * @return virtual machines.
+	 * @throws IOException                  When VM definition XML cannot be
+	 *                                      retrieved.
+	 * @throws SAXException                 When the XML validation failed.
+	 * @throws ParserConfigurationException When the XML parsing failed.
 	 */
 	@GET
 	@Path("{node:service:.+}/{criteria}")
@@ -332,8 +334,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	/**
 	 * Return a snapshot of the console.
 	 *
-	 * @param subscription
-	 *            the valid screenshot of the console.
+	 * @param subscription the valid screenshot of the console.
 	 * @return the valid screenshot of the console.
 	 */
 	@GET
@@ -394,30 +395,27 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
-	 * Authentication will be done to get the data.
+	 * Return a vCloud's resource after an authentication. Return <code>null</code>
+	 * when the resource is not found. Authentication will be done to get the data.
 	 *
-	 * @param parameters
-	 *            The subscription parameters.
-	 * @param resource
-	 *            The remote vCloud resource.
+	 * @param parameters The subscription parameters.
+	 * @param resource   The remote vCloud resource.
 	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
-	protected String getVCloudResource(final Map<String, String> parameters, final String resource) {
+	private String getVCloudResource(final Map<String, String> parameters, final String resource) {
 		return authenticateAndExecute(parameters, HttpMethod.GET, resource);
 	}
 
 	/**
-	 * Return a vCloud's resource after an authentication. Return <code>null</code> when the resource is not found.
-	 * Authentication is started from there.
+	 * Return a vCloud's resource after an authentication. Return <code>null</code>
+	 * when the resource is not found. Authentication is started from there.
 	 *
-	 * @param parameters
-	 *            The subscription parameters.
-	 * @param resource
-	 *            The remote resource.
+	 * @param parameters The subscription parameters.
+	 * @param method     The HTTP method.
+	 * @param resource   The remote resource.
 	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
-	protected String authenticateAndExecute(final Map<String, String> parameters, final String method,
+	private String authenticateAndExecute(final Map<String, String> parameters, final String method,
 			final String resource) {
 		final VCloudCurlProcessor processor = new VCloudCurlProcessor();
 		authenticate(parameters, processor);
@@ -425,20 +423,17 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Return/execute a vCloud resource. Return <code>null</code> when the resource is not found. Authentication should
-	 * be proceeded before for authenticated query.
+	 * Return/execute a vCloud resource. Return <code>null</code> when the resource
+	 * is not found. Authentication should be proceeded before for authenticated
+	 * query.
 	 *
-	 * @param processor
-	 *            The CURL processor with pre-authenticated token.
-	 * @param method
-	 *            HTTP method.
-	 * @param url
-	 *            The remote URL. Trailing <code>/</code> is removed.
-	 * @param resource
-	 *            The remote resource.
+	 * @param processor The CURL processor with pre-authenticated token.
+	 * @param method    HTTP method.
+	 * @param url       The remote URL. Trailing <code>/</code> is removed.
+	 * @param resource  The remote resource.
 	 * @return The remote resource content. My be <code>null</code> with error.
 	 */
-	protected String execute(final CurlProcessor processor, final String method, final String url,
+	private String execute(final CurlProcessor processor, final String method, final String url,
 			final String resource) {
 		// Get the resource using the preempted authentication
 		final CurlRequest request = new CurlRequest(method,
@@ -459,10 +454,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	/**
 	 * Check the server is available with administration right.
 	 *
-	 * @param parameters
-	 *            Subscription parameters.
-	 * @throws Exception
-	 *             when version cannot be retrieved.
+	 * @param parameters Subscription parameters.
+	 * @throws Exception when version cannot be retrieved.
 	 */
 	private void validateAdminAccess(final Map<String, String> parameters) throws Exception {
 		if (getVersion(parameters) == null) {
@@ -568,7 +561,8 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Check the response is valid. For now, the response must not be <code>null</code>.
+	 * Check the response is valid. For now, the response must not be
+	 * <code>null</code>.
 	 */
 	private void checkSchedulerResponse(final String response) {
 		if (response == null) {
@@ -578,17 +572,15 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Decide the best operation suiting to the required operation and depending on the current status of the virtual
-	 * machine.
+	 * Decide the best operation suiting to the required operation and depending on
+	 * the current status of the virtual machine.
 	 *
-	 * @param status
-	 *            The current status of the VM.
-	 * @param operation
-	 *            The requested operation.
-	 * @return The failsafe operation suiting to the current status of the VM. Return <code>null</code> when the
-	 *         computed operation is irreleavant.
+	 * @param status    The current status of the VM.
+	 * @param operation The requested operation.
+	 * @return The failsafe operation suiting to the current status of the VM.
+	 *         Return <code>null</code> when the computed operation is irreleavant.
 	 */
-	protected VmOperation failSafeOperation(final VmStatus status, final VmOperation operation) {
+	private VmOperation failSafeOperation(final VmStatus status, final VmOperation operation) {
 		if (FAILSAFE_OPERATIONS.get(status).containsKey(operation)) {
 			// Mapped operation
 			return FAILSAFE_OPERATIONS.get(status).get(operation);
@@ -601,12 +593,9 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	/**
 	 * Register a mapping Status+operation to operation.
 	 *
-	 * @param status
-	 *            The current status.
-	 * @param operation
-	 *            The requested operation
-	 * @param operationFailSafe
-	 *            The computed operation.
+	 * @param status            The current status.
+	 * @param operation         The requested operation
+	 * @param operationFailSafe The computed operation.
 	 */
 	private void registerOperation(final VmStatus status, final VmOperation operation,
 			final VmOperation operationFailSafe) {
