@@ -472,12 +472,12 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 
 	@Override
 	public String getLastVersion() {
-		// Get the download json from the default repository
+		// Get the download JSON from the default repository
 		try (CurlProcessor curl = new CurlProcessor()) {
 			final String portletVersions = curl.get(
 					"https://my.vmware.com/web/vmware/downloads?p_p_id=ProductIndexPortlet_WAR_itdownloadsportlet&p_p_lifecycle=2&p_p_resource_id=allProducts");
 
-			// Extract the version from the rw String, because of the non stable
+			// Extract the version from the raw String, because of the non stable
 			// content format, but the links
 			// Search for : "target":
 			// "./info/slug/datacenter_cloud_infrastructure/vmware_vcloud_suite/6_0"
