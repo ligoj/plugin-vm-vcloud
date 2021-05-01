@@ -50,7 +50,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -250,7 +249,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, k -> {
 
 			// Authentication request
-			final CurlRequest request = new CurlRequest(HttpMethod.POST, url, null, VCloudCurlProcessor.LOGIN_CALLBACK,
+			final var request = new CurlRequest(HttpMethod.POST, url, null, VCloudCurlProcessor.LOGIN_CALLBACK,
 					"Authorization:Basic " + authentication);
 
 			// Execute with a timeout
@@ -264,13 +263,13 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * Prepare an authenticated connection to vCloud. The given processor would be updated with the security token.
 	 */
 	private void authenticate(final Map<String, String> parameters, final VCloudCurlProcessor processor) {
-		final String user = parameters.get(PARAMETER_USER);
-		final String password = StringUtils.trimToEmpty(parameters.get(PARAMETER_PASSWORD));
-		final String organization = StringUtils.trimToEmpty(parameters.get(PARAMETER_ORGANIZATION));
-		final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "sessions";
+		final var user = parameters.get(PARAMETER_USER);
+		final var password = StringUtils.trimToEmpty(parameters.get(PARAMETER_PASSWORD));
+		final var organization = StringUtils.trimToEmpty(parameters.get(PARAMETER_ORGANIZATION));
+		final var url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "sessions";
 
 		// Encode the authentication 'user@organization:password'
-		final String authentication = Base64
+		final var authentication = Base64
 				.encodeBase64String((user + "@" + organization + ":" + password).getBytes(StandardCharsets.UTF_8));
 
 		// Authentication request using cache
@@ -281,9 +280,9 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	public VCloudVm getVmDetails(final Map<String, String> parameters)
 			throws SAXException, IOException, ParserConfigurationException {
 
-		final String id = parameters.get(PARAMETER_VM);
+		final var id = parameters.get(PARAMETER_VM);
 		// Get the VM if exists
-		final List<VCloudVm> vms = toVms(getVCloudResource(parameters,
+		final var vms = toVms(getVCloudResource(parameters,
 				"/query?type=vm&format=idrecords&filter=id==urn:vcloud:vm:" + id + "&pageSize=1"));
 
 		// Check the VM has been found
@@ -337,15 +336,15 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	@Path("{subscription:\\d+}/console.png")
 	@Produces("image/png")
 	public StreamingOutput getConsole(@PathParam("subscription") final int subscription) {
-		final Map<String, String> parameters = subscriptionResource.getParameters(subscription);
-		final VCloudCurlProcessor processor = new VCloudCurlProcessor();
+		final var parameters = subscriptionResource.getParameters(subscription);
+		final var processor = new VCloudCurlProcessor();
 		authenticate(parameters, processor);
 
 		// Get the screen thumbnail
 		return output -> {
-			final String url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
+			final var url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
 					+ parameters.get(PARAMETER_VM) + "/screen";
-			final CurlRequest curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
+			final var curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
 				if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
 					// Copy the stream
 					IOUtils.copy(response.getEntity().getContent(), output);
@@ -361,7 +360,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * Build a described {@link Vm} bean from a XML VMRecord entry.
 	 */
 	private VCloudVm toVm(final Element record) {
-		final VCloudVm result = new VCloudVm();
+		final var result = new VCloudVm();
 		result.setId(StringUtils.removeStart(record.getAttribute("id"), "urn:vcloud:vm:"));
 		result.setName(record.getAttribute("name"));
 		result.setOs(record.getAttribute("guestOs"));
@@ -385,7 +384,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * Build described beans from a XML result.
 	 */
 	private List<VCloudVm> toVms(final String vmAsXml) throws SAXException, IOException, ParserConfigurationException {
-		final NodeList tags = xml.getTags(vmAsXml, "VMRecord");
+		final var tags = xml.getTags(vmAsXml, "VMRecord");
 		return IntStream.range(0, tags.getLength()).mapToObj(tags::item).map(n -> (Element) n).map(this::toVm)
 				.collect(Collectors.toList());
 	}
@@ -413,7 +412,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 */
 	private String authenticateAndExecute(final Map<String, String> parameters, final String method,
 			final String resource) {
-		final VCloudCurlProcessor processor = new VCloudCurlProcessor();
+		final var processor = new VCloudCurlProcessor();
 		authenticate(parameters, processor);
 		return execute(processor, method, parameters.get(PARAMETER_API), resource);
 	}
@@ -431,7 +430,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	private String execute(final CurlProcessor processor, final String method, final String url,
 			final String resource) {
 		// Get the resource using the preempted authentication
-		final CurlRequest request = new CurlRequest(method,
+		final var request = new CurlRequest(method,
 				StringUtils.appendIfMissing(url, "/") + StringUtils.removeStart(resource, "/"), null);
 		request.setSaveResponse(true);
 
@@ -468,15 +467,15 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	@Override
 	public String getLastVersion() {
 		// Get the download JSON from the default repository
-		try (CurlProcessor curl = new CurlProcessor()) {
-			final String portletVersions = curl.get(
+		try (var curl = new CurlProcessor()) {
+			final var portletVersions = curl.get(
 					"https://my.vmware.com/web/vmware/downloads?p_p_id=ProductIndexPortlet_WAR_itdownloadsportlet&p_p_lifecycle=2&p_p_resource_id=allProducts");
 
 			// Extract the version from the raw String, because of the non stable
 			// content format, but the links
 			// Search for : "target":
 			// "./info/slug/datacenter_cloud_infrastructure/vmware_vcloud_suite/6_0"
-			final int linkIndex = Math
+			final var linkIndex = Math
 					.min(ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/")
 							+ "vmware_vcloud_suite/".length(), portletVersions.length());
 			return portletVersions.substring(linkIndex,
@@ -495,7 +494,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	@Override
 	public SubscriptionStatusWithData checkSubscriptionStatus(final int subscription, final String node,
 			final Map<String, String> parameters) throws Exception { // NOSONAR
-		final SubscriptionStatusWithData status = new SubscriptionStatusWithData();
+		final var status = new SubscriptionStatusWithData();
 		status.put("vm", getVmDetails(parameters));
 		status.put("schedules", vmScheduleRepository.countBySubscription(subscription));
 		return status;
@@ -504,20 +503,20 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	@Override
 	public void execute(final VmExecution execution) throws Exception {
 		final int subscription = execution.getSubscription().getId();
-		final VmOperation operation = execution.getOperation();
-		final Map<String, String> parameters = subscriptionResource.getParametersNoCheck(subscription);
-		final String vmUrl = "/vApp/vm-" + parameters.get(PARAMETER_VM);
+		final var operation = execution.getOperation();
+		final var parameters = subscriptionResource.getParametersNoCheck(subscription);
+		final var vmUrl = "/vApp/vm-" + parameters.get(PARAMETER_VM);
 
 		// First get VM state
-		final VCloudVm vm = getVmDetails(parameters);
-		final VmStatus status = vm.getStatus();
+		final var vm = getVmDetails(parameters);
+		final var status = vm.getStatus();
 
 		// Share the VM name and current status to the execution
 		execution.setVm(vm.getName());
 		execution.setPreviousState(status);
 
 		// Get the right operation depending on the current state
-		final VmOperation operationF = failSafeOperation(status, operation);
+		final var operationF = failSafeOperation(status, operation);
 		execution.setOperation(operationF);
 		if (operationF == null) {
 			// Final operation is considered as useless
@@ -526,21 +525,21 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 			return;
 		}
 
-		final String action = MapUtils.getObject(OPERATION_TO_VCLOUD, operationF,
+		final var action = MapUtils.getObject(OPERATION_TO_VCLOUD, operationF,
 				operationF.name().toLowerCase(Locale.ENGLISH));
 
 		// Check if undeployment is requested to shutdown completely the VM
 		if (operationF == VmOperation.SHUTDOWN || operationF == VmOperation.OFF) {
 			// The requested operation needs the VM to be undeployed
-			final String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><UndeployVAppParams xmlns=\"http://www.vmware.com/vcloud/v1.5\"><UndeployPowerAction>"
+			final var content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><UndeployVAppParams xmlns=\"http://www.vmware.com/vcloud/v1.5\"><UndeployPowerAction>"
 					+ action + "</UndeployPowerAction></UndeployVAppParams>";
-			final String url = StringUtils.removeEnd(parameters.get(PARAMETER_API), "/");
-			final CurlRequest request = new CurlRequest(HttpMethod.POST, url + vmUrl + "/action/undeploy", content,
+			final var url = StringUtils.removeEnd(parameters.get(PARAMETER_API), "/");
+			final var request = new CurlRequest(HttpMethod.POST, url + vmUrl + "/action/undeploy", content,
 					"Content-Type:application/vnd.vmware.vcloud.undeployVAppParams+xml");
 			request.setSaveResponse(true);
 
 			// Use the preempted authentication
-			final VCloudCurlProcessor processor = new VCloudCurlProcessor();
+			final var processor = new VCloudCurlProcessor();
 			authenticate(parameters, processor);
 
 			// Execute the request

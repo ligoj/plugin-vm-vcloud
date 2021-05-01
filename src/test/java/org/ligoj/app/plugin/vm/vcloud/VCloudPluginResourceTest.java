@@ -8,11 +8,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.transaction.Transactional;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -22,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.ligoj.app.AbstractServerTest;
-import org.ligoj.app.api.SubscriptionStatusWithData;
 import org.ligoj.app.dao.SubscriptionRepository;
 import org.ligoj.app.model.DelegateNode;
 import org.ligoj.app.model.Node;
@@ -100,13 +97,13 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 	void getVersion() throws Exception {
 		prepareMockVersion();
 
-		final String version = resource.getVersion(subscription);
+		final var version = resource.getVersion(subscription);
 		Assertions.assertEquals("5.5.4.2831206 Fri Jun 19 15:07:32 CEST 2015", version);
 	}
 
 	@Test
 	void getLastVersion() {
-		final String lastVersion = resource.getLastVersion();
+		final var lastVersion = resource.getLastVersion();
 		Assertions.assertNotNull(lastVersion);
 		Assertions.assertTrue(lastVersion.compareTo("2017") >= 0);
 	}
@@ -147,7 +144,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 		final Map<String, String> parameters = new HashMap<>(
 				pvResource.getNodeParameters("service:vm:vcloud:obs-fca-info"));
 		parameters.put(VCloudPluginResource.PARAMETER_VM, "75aa69b4-8cff-40cd-9338-9abafc7d5935");
-		final VCloudVm vm = resource.getVmDetails(parameters);
+		final var vm = resource.getVmDetails(parameters);
 		checkVm(vm);
 		Assertions.assertTrue(vm.isDeployed());
 	}
@@ -166,7 +163,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 	@Test
 	void checkSubscriptionStatus() throws Exception {
 		prepareMockItem();
-		final SubscriptionStatusWithData nodeStatusWithData = resource.checkSubscriptionStatus(subscription, null,
+		final var nodeStatusWithData = resource.checkSubscriptionStatus(subscription, null,
 				subscriptionResource.getParametersNoCheck(subscription));
 		Assertions.assertTrue(nodeStatusWithData.getStatus().isUp());
 		checkVm((VCloudVm) nodeStatusWithData.getData().get("vm"));
@@ -271,7 +268,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 		prepareMockFindAll();
 		httpServer.start();
 
-		final List<VCloudVm> projects = resource.findAllByName("service:vm:vcloud:obs-fca-info", "sc");
+		final var projects = resource.findAllByName("service:vm:vcloud:obs-fca-info", "sc");
 		Assertions.assertEquals(3, projects.size());
 		checkItem(projects.get(0));
 	}
@@ -294,8 +291,8 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 								StandardCharsets.UTF_8))));
 		httpServer.start();
 
-		final StreamingOutput imageStream = resource.getConsole(subscription);
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		final var imageStream = resource.getConsole(subscription);
+		final var outputStream = new ByteArrayOutputStream();
 		imageStream.write(outputStream);
 		Assertions.assertTrue(outputStream.toByteArray().length > 1024);
 	}
@@ -307,8 +304,8 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK)));
 		httpServer.start();
 
-		final StreamingOutput imageStream = resource.getConsole(subscription);
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		final var imageStream = resource.getConsole(subscription);
+		final var outputStream = new ByteArrayOutputStream();
 		imageStream.write(outputStream);
 		Assertions.assertEquals(0, outputStream.toByteArray().length);
 	}
@@ -320,8 +317,8 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 				.willReturn(aResponse().withStatus(HttpStatus.SC_NO_CONTENT)));
 		httpServer.start();
 
-		final StreamingOutput imageStream = resource.getConsole(subscription);
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		final var imageStream = resource.getConsole(subscription);
+		final var outputStream = new ByteArrayOutputStream();
 		imageStream.write(outputStream);
 		Assertions.assertEquals(0, outputStream.toByteArray().length);
 	}
@@ -332,7 +329,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 				.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/power/action/powerOn"))
 						.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		prepareMockItem();
-		final VmExecution execution = newExecution(VmOperation.ON);
+		final var execution = newExecution(VmOperation.ON);
 		resource.execute(execution);
 
 		// New execution
@@ -341,7 +338,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 	}
 
 	private VmExecution newExecution(final VmOperation operation) {
-		final VmExecution execution = new VmExecution();
+		final var execution = new VmExecution();
 		execution.setSubscription(subscriptionRepository.findOneExpected(subscription));
 		execution.setOperation(operation);
 		return execution;
@@ -364,7 +361,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		httpServer.start();
-		final VmExecution execution = newExecution(VmOperation.SHUTDOWN);
+		final var execution = newExecution(VmOperation.SHUTDOWN);
 		resource.execute(execution);
 
 		// New execution
@@ -388,7 +385,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 				.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/power/action/powerOn"))
 						.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		httpServer.start();
-		final VmExecution execution = newExecution(VmOperation.RESET);
+		final var execution = newExecution(VmOperation.RESET);
 		resource.execute(execution);
 
 		// New execution
@@ -413,7 +410,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 		httpServer.stubFor(post(urlPathEqualTo("/api/vApp/vm-75aa69b4-8cff-40cd-9338-9abafc7d5935/action/undeploy"))
 				.willReturn(aResponse().withStatus(HttpStatus.SC_OK).withBody("<Task>...</Task>")));
 		httpServer.start();
-		final VmExecution execution = newExecution(VmOperation.OFF);
+		final var execution = newExecution(VmOperation.OFF);
 		resource.execute(execution);
 
 		// New execution
@@ -456,7 +453,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 						new ClassPathResource("mock-server/vcloud/vcloud-query-vm-poweredon.xml").getInputStream(),
 						StandardCharsets.UTF_8))));
 		httpServer.start();
-		final VmExecution execution = newExecution(VmOperation.ON);
+		final var execution = newExecution(VmOperation.ON);
 		resource.execute(execution);
 
 		// No new execution

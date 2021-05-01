@@ -15,10 +15,10 @@ public class VCloudLoginHttpResponseCallback extends DefaultHttpResponseCallback
 
 	@Override
 	public boolean onResponse(final CurlRequest request, final CloseableHttpResponse response) throws IOException {
-		final boolean result = super.onResponse(request, response);
+		final var result = super.onResponse(request, response);
 		if (result) {
 			// Success request, get the authentication token
-			final String token = ObjectUtils
+			final var token = ObjectUtils
 					.defaultIfNull(response.getFirstHeader("x-vcloud-authorization"), new BasicHeader("", null))
 					.getValue();
 
