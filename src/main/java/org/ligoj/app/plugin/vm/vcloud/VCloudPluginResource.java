@@ -7,7 +7,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.servlet.http.HttpServletResponse;
@@ -385,8 +384,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 */
 	private List<VCloudVm> toVms(final String vmAsXml) throws SAXException, IOException, ParserConfigurationException {
 		final var tags = xml.getTags(vmAsXml, "VMRecord");
-		return IntStream.range(0, tags.getLength()).mapToObj(tags::item).map(n -> (Element) n).map(this::toVm)
-				.collect(Collectors.toList());
+		return IntStream.range(0, tags.getLength()).mapToObj(tags::item).map(n -> (Element) n).map(this::toVm).toList();
 	}
 
 	/**
