@@ -1,23 +1,24 @@
+/*
+ * Licensed under MIT (https://github.com/ligoj/ligoj/blob/master/LICENSE)
+ */
 package org.ligoj.app.plugin.vm.vcloud;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.StreamingOutput;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
@@ -41,6 +42,7 @@ import org.ligoj.app.resource.plugin.XmlUtils;
 import org.ligoj.bootstrap.core.curl.CurlCacheToken;
 import org.ligoj.bootstrap.core.curl.CurlProcessor;
 import org.ligoj.bootstrap.core.curl.CurlRequest;
+import org.ligoj.bootstrap.core.json.ObjectMapperTrim;
 import org.ligoj.bootstrap.core.resource.BusinessException;
 import org.ligoj.bootstrap.core.security.SecurityHelper;
 import org.ligoj.bootstrap.core.validation.ValidationJsonException;
@@ -242,7 +244,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * @param url            The remote URL. Trailing <code>/</code> is removed.
 	 * @param authentication Credential.
 	 * @param processor      The CURL processor with pre-authenticated token.
-	 * @return The remote resource content. My be <code>null</code> with error.
+	 * @return The remote resource content. May be <code>null</code> with error.
 	 */
 	private String authenticate(final String url, final String authentication, final VCloudCurlProcessor processor) {
 		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, k -> {
@@ -344,7 +346,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 			final var url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
 					+ parameters.get(PARAMETER_VM) + "/screen";
 			final var curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
-				if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
+				if (response.getCode() == HttpServletResponse.SC_OK) {
 					// Copy the stream
 					IOUtils.copy(response.getEntity().getContent(), output);
 					output.flush();
@@ -356,7 +358,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Build a described {@link Vm} bean from a XML VMRecord entry.
+	 * Build a described {@link Vm} bean from an XML VMRecord entry.
 	 */
 	private VCloudVm toVm(final Element record) {
 		final var result = new VCloudVm();
@@ -393,7 +395,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 *
 	 * @param parameters The subscription parameters.
 	 * @param resource   The remote vCloud resource.
-	 * @return The remote resource content. My be <code>null</code> with error.
+	 * @return The remote resource content. May be <code>null</code> with error.
 	 */
 	private String getVCloudResource(final Map<String, String> parameters, final String resource) {
 		return authenticateAndExecute(parameters, HttpMethod.GET, resource);
@@ -406,7 +408,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * @param parameters The subscription parameters.
 	 * @param method     The HTTP method.
 	 * @param resource   The remote resource.
-	 * @return The remote resource content. My be <code>null</code> with error.
+	 * @return The remote resource content. May be <code>null</code> with error.
 	 */
 	private String authenticateAndExecute(final Map<String, String> parameters, final String method,
 			final String resource) {
@@ -423,7 +425,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * @param method    HTTP method.
 	 * @param url       The remote URL. Trailing <code>/</code> is removed.
 	 * @param resource  The remote resource.
-	 * @return The remote resource content. My be <code>null</code> with error.
+	 * @return The remote resource content. May be <code>null</code> with error.
 	 */
 	private String execute(final CurlProcessor processor, final String method, final String url,
 			final String resource) {
@@ -463,22 +465,16 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	@Override
-	public String getLastVersion() {
+	public String getLastVersion() throws IOException {
 		// Get the download JSON from the default repository
 		try (var curl = new CurlProcessor()) {
-			final var portletVersions = curl.get(
-					"https://my.vmware.com/web/vmware/downloads?p_p_id=ProductIndexPortlet_WAR_itdownloadsportlet&p_p_lifecycle=2&p_p_resource_id=allProducts");
-
-			// Extract the version from the raw String, because of the non stable
-			// content format, but the links
-			// Search for : "target":
-			// "./info/slug/datacenter_cloud_infrastructure/vmware_vcloud_suite/6_0"
-			final var linkIndex = Math
-					.min(ObjectUtils.defaultIfNull(portletVersions, "").indexOf("vmware_vcloud_suite/")
-							+ "vmware_vcloud_suite/".length(), portletVersions.length());
-			return portletVersions.substring(linkIndex,
-					Math.min(Math.max(portletVersions.indexOf('#', linkIndex), linkIndex),
-							Math.max(portletVersions.indexOf('\"', linkIndex), linkIndex)));
+			final var versionsAsString = curl.get(
+					"https://customerconnect.vmware.com/channel/public/api/v1.0/products/getProductHeader?category=datacenter_cloud_infrastructure&product=vmware_vcloud_suite&version=2019");
+			final var versions = new ObjectMapperTrim().readValue(versionsAsString, VCloudVersions.class);
+			return versions.getVersions().stream()
+					.map(o -> Objects.toString(o.get("id"), "0"))
+					.filter(v -> !v.isBlank())
+					.sorted().findFirst().orElse(null);
 		}
 	}
 
@@ -526,7 +522,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 		final var action = MapUtils.getObject(OPERATION_TO_VCLOUD, operationF,
 				operationF.name().toLowerCase(Locale.ENGLISH));
 
-		// Check if undeployment is requested to shutdown completely the VM
+		// Check if undeployment is requested to shut down completely the VM
 		if (operationF == VmOperation.SHUTDOWN || operationF == VmOperation.OFF) {
 			// The requested operation needs the VM to be undeployed
 			final var content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><UndeployVAppParams xmlns=\"http://www.vmware.com/vcloud/v1.5\"><UndeployPowerAction>"
@@ -569,7 +565,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * @param status    The current status of the VM.
 	 * @param operation The requested operation.
 	 * @return The failsafe operation suiting to the current status of the VM. Return <code>null</code> when the
-	 *         computed operation is irreleavant.
+	 * computed operation is irrelevant.
 	 */
 	private VmOperation failSafeOperation(final VmStatus status, final VmOperation operation) {
 		if (FAILSAFE_OPERATIONS.get(status).containsKey(operation)) {

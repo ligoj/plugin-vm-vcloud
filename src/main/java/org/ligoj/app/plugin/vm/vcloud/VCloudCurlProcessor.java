@@ -1,3 +1,6 @@
+/*
+ * Licensed under MIT (https://github.com/ligoj/ligoj/blob/master/LICENSE)
+ */
 package org.ligoj.app.plugin.vm.vcloud;
 
 import org.ligoj.bootstrap.core.curl.CurlProcessor;

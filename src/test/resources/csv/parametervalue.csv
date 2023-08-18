@@ -4,4 +4,4 @@ service:vm:vcloud:url;http://localhost:8120/portal;service:vm:vcloud:obs-fca-inf
 service:vm:vcloud:user;secret;service:vm:vcloud:obs-fca-info;
 service:vm:vcloud:password;secret;service:vm:vcloud:obs-fca-info;
 service:vm:vcloud:organization;FCA-INFO-FCA;service:vm:vcloud:obs-fca-info;
-service:vm:vcloud:id;75aa69b4-8cff-40cd-9338-9abafc7d5935;;1
+service:vm:vcloud:id;75aa69b4-8cff-40cd-9338-000000000000;;1
