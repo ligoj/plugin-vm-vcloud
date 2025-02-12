@@ -63,7 +63,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 	void prepareData() throws IOException {
 		// Only with Spring context
 		persistSystemEntities();
-		persistEntities("csv", new Class[] { Node.class, Parameter.class, Project.class, Subscription.class,
+		persistEntities("csv", new Class<?>[] { Node.class, Parameter.class, Project.class, Subscription.class,
 				ParameterValue.class, DelegateNode.class }, StandardCharsets.UTF_8);
 		this.subscription = getSubscription("Jupiter");
 
@@ -255,7 +255,7 @@ class VCloudPluginResourceTest extends AbstractServerTest {
 
 		final var projects = resource.findAllByName("service:vm:vcloud:obs-fca-info", "sc");
 		Assertions.assertEquals(3, projects.size());
-		checkItem(projects.get(0));
+		checkItem(projects.getFirst());
 	}
 
 	@Test
