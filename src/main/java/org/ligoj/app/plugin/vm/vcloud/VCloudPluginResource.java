@@ -3,30 +3,18 @@
  */
 package org.ligoj.app.plugin.vm.vcloud;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HttpMethod;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.StreamingOutput;
-
-import javax.xml.parsers.ParserConfigurationException;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.ligoj.app.api.SubscriptionStatusWithData;
 import org.ligoj.app.dao.NodeRepository;
@@ -53,7 +41,11 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import lombok.extern.slf4j.Slf4j;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * vCloud VM resource.
@@ -267,7 +259,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 		final var user = parameters.get(PARAMETER_USER);
 		final var password = StringUtils.trimToEmpty(parameters.get(PARAMETER_PASSWORD));
 		final var organization = StringUtils.trimToEmpty(parameters.get(PARAMETER_ORGANIZATION));
-		final var url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "sessions";
+		final var url = Strings.CS.appendIfMissing(parameters.get(PARAMETER_API), "/") + "sessions";
 
 		// Encode the authentication 'user@organization:password'
 		final var authentication = Base64
@@ -343,7 +335,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 
 		// Get the screen thumbnail
 		return output -> {
-			final var url = StringUtils.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
+			final var url = Strings.CS.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
 					+ parameters.get(PARAMETER_VM) + "/screen";
 			final var curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
 				if (response.getCode() == HttpServletResponse.SC_OK) {
@@ -362,7 +354,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 */
 	private VCloudVm toVm(final Element record) {
 		final var result = new VCloudVm();
-		result.setId(StringUtils.removeStart(record.getAttribute("id"), "urn:vcloud:vm:"));
+		result.setId(Strings.CS.removeStart(record.getAttribute("id"), "urn:vcloud:vm:"));
 		result.setName(record.getAttribute("name"));
 		result.setOs(record.getAttribute("guestOs"));
 
@@ -371,13 +363,13 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 		result.setStatus(EnumUtils.getEnum(VmStatus.class, record.getAttribute("status")));
 		result.setCpu(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("numberOfCpus"))));
 		result.setBusy(Boolean.parseBoolean(
-				ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isBusy")), "false")));
+				ObjectUtils.getIfNull(StringUtils.trimToNull(record.getAttribute("isBusy")), "false")));
 		result.setVApp(StringUtils.trimToNull(record.getAttribute("containerName")));
 		result.setVAppId(
-				StringUtils.trimToNull(StringUtils.removeStart(record.getAttribute("container"), "urn:vcloud:vapp:")));
+				StringUtils.trimToNull(Strings.CS.removeStart(record.getAttribute("container"), "urn:vcloud:vapp:")));
 		result.setRam(NumberUtils.toInt(StringUtils.trimToNull(record.getAttribute("memoryMB"))));
 		result.setDeployed(Boolean.parseBoolean(
-				ObjectUtils.defaultIfNull(StringUtils.trimToNull(record.getAttribute("isDeployed")), "false")));
+				ObjectUtils.getIfNull(StringUtils.trimToNull(record.getAttribute("isDeployed")), "false")));
 		return result;
 	}
 
@@ -431,7 +423,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 			final String resource) {
 		// Get the resource using the preempted authentication
 		final var request = new CurlRequest(method,
-				StringUtils.appendIfMissing(url, "/") + StringUtils.removeStart(resource, "/"), null);
+				Strings.CS.appendIfMissing(url, "/") + Strings.CS.removeStart(resource, "/"), null);
 		request.setSaveResponse(true);
 
 		// Execute the requests
@@ -460,7 +452,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	@Override
 	public String getVersion(final Map<String, String> parameters) throws Exception {
 		return StringUtils.trimToNull(
-				xml.getTags(ObjectUtils.defaultIfNull(getVCloudResource(parameters, "/admin"), "<a><Description/></a>"),
+				xml.getTags(ObjectUtils.getIfNull(getVCloudResource(parameters, "/admin"), "<a><Description/></a>"),
 						"Description").item(0).getTextContent());
 	}
 
@@ -527,7 +519,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 			// The requested operation needs the VM to be undeployed
 			final var content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><UndeployVAppParams xmlns=\"http://www.vmware.com/vcloud/v1.5\"><UndeployPowerAction>"
 					+ action + "</UndeployPowerAction></UndeployVAppParams>";
-			final var url = StringUtils.removeEnd(parameters.get(PARAMETER_API), "/");
+			final var url = Strings.CS.removeEnd(parameters.get(PARAMETER_API), "/");
 			final var request = new CurlRequest(HttpMethod.POST, url + vmUrl + "/action/undeploy", content,
 					"Content-Type:application/vnd.vmware.vcloud.undeployVAppParams+xml");
 			request.setSaveResponse(true);

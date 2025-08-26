@@ -22,7 +22,7 @@ public class VCloudLoginHttpResponseCallback extends DefaultHttpResponseCallback
 		if (result) {
 			// Success request, get the authentication token
 			final var token = ObjectUtils
-					.defaultIfNull(response.getFirstHeader("x-vcloud-authorization"), new BasicHeader("", null))
+					.getIfNull(response.getFirstHeader("x-vcloud-authorization"), new BasicHeader("", null))
 					.getValue();
 
 			// Save this token in the associated processor for next requests
