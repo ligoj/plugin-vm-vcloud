@@ -14,8 +14,7 @@
  *
  * Kept free of Vue SFC imports so it can be unit-tested without a DOM.
  */
-import { h } from 'vue'
-import { VBtn, VChip, VIcon, useI18nStore } from '@ligoj/host'
+import { renderServiceLink, renderDetailsChip, useI18nStore } from '@ligoj/host'
 
 const PARAM_URL = 'service:vm:vcloud:url'
 const PARAM_ORG = 'service:vm:vcloud:organization'
@@ -29,19 +28,11 @@ function renderFeatures(subscription) {
   if (!url || !org) return []
   const { t } = useI18nStore()
   return [
-    h(
-      VBtn,
-      {
-        icon: true,
-        size: 'small',
-        variant: 'text',
-        title: t('service:vm:vcloud:console'),
-        href: `${url.replace(/\/$/, '')}/${encodeURIComponent(org)}/#/vmListPage?`,
-        target: '_blank',
-        rel: 'noopener noreferrer',
-      },
-      () => h(VIcon, { size: 'small' }, () => 'mdi-cloud'),
-    ),
+    renderServiceLink({
+      icon: 'mdi-cloud',
+      href: `${url.replace(/\/$/, '')}/${encodeURIComponent(org)}/#/vmListPage?`,
+      title: t('service:vm:vcloud:console'),
+    }),
   ]
 }
 
@@ -50,11 +41,7 @@ function renderDetailsKey(subscription) {
   const id = subscription?.parameters?.[PARAM_ID]
   if (!id) return null
   const { t } = useI18nStore()
-  return h(
-    VChip,
-    { size: 'small', variant: 'tonal', class: 'mr-1', title: t('service:vm:vcloud:id') },
-    () => [h(VIcon, { start: true, size: 'small' }, () => 'mdi-cloud'), ' ', String(id)],
-  )
+  return renderDetailsChip({ icon: 'mdi-cloud', text: id, title: t('service:vm:vcloud:id') })
 }
 
 export default { renderFeatures, renderDetailsKey }
