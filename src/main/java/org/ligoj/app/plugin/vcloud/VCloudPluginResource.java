@@ -1,7 +1,7 @@
 /*
  * Licensed under MIT (https://github.com/ligoj/ligoj/blob/master/LICENSE)
  */
-package org.ligoj.app.plugin.vm.vcloud;
+package org.ligoj.app.plugin.vcloud;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.*;
