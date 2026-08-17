@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
-const HOST_SRC = resolve(__dirname, '../../../ligoj/app-ui/src/main/webapp/src')
+const HOST_SRC = resolve(import.meta.dirname, '../../../ligoj/app-ui/src/main/webapp/src')
 
 export default defineConfig({
   plugins: [vue()],
@@ -11,8 +11,8 @@ export default defineConfig({
     dedupe: ['vue', 'pinia', 'vue-router', 'vuetify'],
   },
   build: {
-    lib: { entry: resolve(__dirname, 'src/index.js'), formats: ['es'], fileName: () => 'index.js' },
-    outDir: resolve(__dirname, '../src/main/resources/META-INF/resources/webjars/vm-vcloud/vue'),
+    lib: { entry: resolve(import.meta.dirname, 'src/index.js'), formats: ['es'], fileName: () => 'index.js' },
+    outDir: resolve(import.meta.dirname, '../src/main/resources/META-INF/resources/webjars/vm-vcloud/vue'),
     emptyOutDir: true,
     rollupOptions: {
       external: ['vue', 'vue-router', 'pinia', 'vuetify', '@ligoj/host'],
