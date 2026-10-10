@@ -14,7 +14,7 @@
  *
  * Kept free of Vue SFC imports so it can be unit-tested without a DOM.
  */
-import { renderServiceLink, renderDetailsChip, useI18nStore } from '@ligoj/host'
+import { renderServiceLink, renderDetailsChip, useI18nStore, remoteSearchField } from '@ligoj/host'
 
 const PARAM_URL = 'service:vm:vcloud:url'
 const PARAM_ORG = 'service:vm:vcloud:organization'
@@ -44,4 +44,16 @@ function renderDetailsKey(subscription) {
   return renderDetailsChip({ icon: 'mdi-cloud', text: id, title: t('service:vm:vcloud:id') })
 }
 
-export default { renderFeatures, renderDetailsKey }
+// Subscribe-wizard input: the virtual machines of the selected instance, searched as the user types
+const VmField = remoteSearchField({ path: 'rest/service/vm/vcloud' })
+
+/**
+ * Subscribe-wizard hook: `service:vm:vcloud:id` is picked among the virtual machines.
+ * Null for every other parameter and when editing a node: the default
+ * type-based input is rendered.
+ */
+function parameterField({ parameter, isNode } = {}) {
+  return !isNode && parameter?.id === PARAM_ID ? VmField : null
+}
+
+export default { renderFeatures, renderDetailsKey, parameterField }
