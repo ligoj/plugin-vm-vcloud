@@ -82,7 +82,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	public static final String PARAMETER_URL = KEY + ":url";
 
 	/**
-	 * vCloud user name.
+	 * vCloud username.
 	 */
 	public static final String PARAMETER_USER = KEY + ":user";
 
@@ -239,7 +239,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 * @return The remote resource content. May be <code>null</code> with error.
 	 */
 	private String authenticate(final String url, final String authentication, final VCloudCurlProcessor processor) {
-		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, k -> {
+		return curlCacheToken.getTokenCache(VCloudPluginResource.class, url + "##" + authentication, _ -> {
 
 			// Authentication request
 			final var request = new CurlRequest(HttpMethod.POST, url, null, VCloudCurlProcessor.LOGIN_CALLBACK,
@@ -283,7 +283,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 			// Invalid id
 			throw new ValidationJsonException(PARAMETER_VM, "vcloud-vm", id);
 		}
-		return vms.get(0);
+		return vms.getFirst();
 	}
 
 	@Override
@@ -337,7 +337,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 		return output -> {
 			final var url = Strings.CS.appendIfMissing(parameters.get(PARAMETER_API), "/") + "vApp/vm-"
 					+ parameters.get(PARAMETER_VM) + "/screen";
-			final var curlRequest = new CurlRequest("GET", url, null, (request, response) -> {
+			final var curlRequest = new CurlRequest("GET", url, null, (_, response) -> {
 				if (response.getCode() == HttpServletResponse.SC_OK) {
 					// Copy the stream
 					IOUtils.copy(response.getEntity().getContent(), output);
@@ -374,7 +374,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	/**
-	 * Build described beans from a XML result.
+	 * Build described beans from an XML result.
 	 */
 	private List<VCloudVm> toVms(final String vmAsXml) throws SAXException, IOException, ParserConfigurationException {
 		final var tags = xml.getTags(vmAsXml, "VMRecord");
@@ -578,7 +578,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	 */
 	private void registerOperation(final VmStatus status, final VmOperation operation,
 			final VmOperation operationFailSafe) {
-		FAILSAFE_OPERATIONS.computeIfAbsent(status, s -> new EnumMap<>(VmOperation.class));
+		FAILSAFE_OPERATIONS.computeIfAbsent(status, _ -> new EnumMap<>(VmOperation.class));
 		FAILSAFE_OPERATIONS.get(status).put(operation, operationFailSafe);
 	}
 
