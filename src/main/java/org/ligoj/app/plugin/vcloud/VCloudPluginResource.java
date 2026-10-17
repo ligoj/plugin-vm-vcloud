@@ -457,7 +457,7 @@ public class VCloudPluginResource extends AbstractToolPluginResource
 	}
 
 	@Override
-	public String getLastVersion() throws IOException {
+	public String getLastVersion() {
 		// Get the download JSON from the default repository
 		try (var curl = new CurlProcessor()) {
 			final var versionsAsString = curl.get(
